@@ -1,0 +1,89 @@
+# Code block 0
+import numpy as np
+
+# Query live object extent and target region
+try:
+    obj_pos, obj_quat, obj_extent = get_object_pose('red block', return_bbox_extent=True)
+    obj_name = 'red block'
+except Exception:
+    obj_pos, obj_quat, obj_extent = get_object_pose('red cube', return_bbox_extent=True)
+    obj_name = 'red cube'
+
+if obj_extent is None:
+    obj_extent = np.array([0.04, 0.04, 0.04])
+
+grasp_pos, grasp_quat = sample_grasp_pose(obj_name)
+target_pos, target_extent, target_yaw = get_target_region('target')
+
+# Stage 1: Grasp and lift the primary object
+open_gripper()
+goto_pose(grasp_pos, grasp_quat, z_approach=0.1)
+close_gripper()
+
+lift_pos = grasp_pos.copy()
+lift_pos[2] += 0.20
+goto_pose(lift_pos, grasp_quat)
+
+# Code block 1
+import numpy as np
+
+# Retrieve the target region geometry
+target_center, _, _ = get_target_region("target")
+gripper_down_quat = np.array([0.0, 0.0, 1.0, 0.0])
+
+# 1. Move horizontally to a safe approach pose above the target bin
+above_bin_pos = np.array([target_center[0], target_center[1], 0.15])
+goto_pose(above_bin_pos, gripper_down_quat)
+
+# 2. Descend gently into the bin
+place_pos = np.array([target_center[0], target_center[1], -0.065])
+goto_pose(place_pos, gripper_down_quat)
+
+# 3. Release the object gently
+open_gripper()
+
+# 4. Retreat straight up out of the bin
+goto_pose(above_bin_pos, gripper_down_quat)
+
+# Code block 2
+import numpy as np
+
+# Stage 1: Grasp and lift the primary object
+obj_pos, obj_quat, obj_extent = get_object_pose('primary', return_bbox_extent=True)
+target_pos, target_extent, _ = get_target_region('target')
+grasp_pos, grasp_quat = sample_grasp_pose('primary')
+
+open_gripper()
+goto_pose(grasp_pos, grasp_quat, z_approach=0.08)
+close_gripper()
+
+lift_pos = grasp_pos.copy()
+lift_pos[2] = 0.10
+goto_pose(lift_pos, grasp_quat)
+
+# Code block 3
+import numpy as np
+
+# Query target region and primary object extent
+target_pos, _, _ = get_target_region()
+_, _, extent = get_object_pose("primary", return_bbox_extent=True)
+if extent is None:
+    extent = np.array([0.04, 0.04, 0.04])
+
+# Gripper facing down orientation
+quat = np.array([0.0, 0.0, 1.0, 0.0])
+
+# Target placement position inside the bin
+place_pos = np.copy(target_pos)
+place_pos[2] += extent[2] / 2.0 + 0.005
+
+# Enter the bin with approach from above the rim
+goto_pose(place_pos, quat, z_approach=0.15)
+
+# Gently release the primary object
+open_gripper()
+
+# Retreat straight up out of the bin
+retreat_pos = np.copy(place_pos)
+retreat_pos[2] += 0.20
+goto_pose(retreat_pos, quat)

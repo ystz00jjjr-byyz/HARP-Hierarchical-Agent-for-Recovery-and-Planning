@@ -1,0 +1,57 @@
+metadata:
+  status: formal
+  task_family: bin_place
+  validation:
+    nominal_task_successes: 8
+    nominal_task_trials: 10
+    outside_container_successes: 8
+    outside_container_trials: 10
+    unstable_release_successes: 8
+    unstable_release_trials: 10
+    bin_entry_blocked_safe_stops: 10
+    bin_entry_blocked_trials: 10
+    model_fallback_successes: 1
+    model_fallback_trials: 1
+    successful_cross_task_grasp_recovery_seeds: [6]
+    unresolved_seeds: [5, 9]
+    fallback_model_requests: 1
+    workspace_edge_successes: 10
+    workspace_edge_trials: 10
+    workspace_edge_safety_stops: 3
+    workspace_edge_combined_fault_successes: 2
+    workspace_edge_combined_fault_trials: 2
+    target_position_changed_successes: 10
+    target_position_changed_trials: 10
+    target_position_changed_candidate_promotion: true
+    object_out_of_workspace_successes: 9
+    object_out_of_workspace_trials: 10
+    object_out_of_workspace_candidate_promotion: true
+    l2_budget_proof_model_requests: 1
+    l2_budget_proof_tokens: 3946
+    l2_budget_safe_stop_completed: true
+    formal_promotion: true
+recovery_library:
+  TARGET_POSITION_CHANGED:
+    - candidate_reobserve_changed_target
+  OBJECT_OUT_OF_WORKSPACE:
+    - candidate_reobserve_out_of_workspace
+  WORKSPACE_EDGE_GRASP_MISS:
+    - reobserve_workspace_edge_primary
+  GRASP_MISS:
+    - recover_bin_grasp_replan
+  OUTSIDE_CONTAINER:
+    - recover_bin_center_place
+  OUTSIDE_TARGET_REGION:
+    actions: [recover_bin_center_place]
+    by_target_geometry:
+      container: [recover_bin_center_place]
+  PLACE_FAILED:
+    - recover_bin_center_place
+  UNSTABLE_RELEASE:
+    - recover_bin_center_place
+  GRASP_RECOVERY_FAILED:
+    - recover_bin_grasp_replan
+  BIN_PLACE_RECOVERY_FAILED:
+    - recover_bin_grasp_replan
+  RECOVERY_BUDGET_LOW:
+    - recover_budget_safe_stop

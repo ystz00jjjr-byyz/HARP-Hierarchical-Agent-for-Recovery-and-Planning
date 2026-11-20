@@ -1,0 +1,74 @@
+----------------------------------------------------------------------------------------------------
+Generated program:
+# Code block 0
+
+
+# Code block 1
+# Stage 1: Grasp and lift the primary object
+open_gripper()
+grasp_pos, grasp_quat = sample_grasp_pose("red cube")
+goto_pose(grasp_pos, grasp_quat, z_approach=0.08)
+close_gripper()
+
+lift_pos = grasp_pos.copy()
+lift_pos[2] += 0.15
+goto_pose(lift_pos, grasp_quat)
+
+# Code block 2
+import numpy as np
+
+target_pos, target_extent, _ = get_target_region("target")
+quat = np.array([0.0, 0.0, 1.0, 0.0])
+
+above_pos = np.array([target_pos[0], target_pos[1], 0.10])
+goto_pose(above_pos, quat)
+
+place_pos = np.array([target_pos[0], target_pos[1], target_pos[2] + 0.03])
+goto_pose(place_pos, quat)
+
+open_gripper()
+
+goto_pose(above_pos, quat)
+
+# Code block 3
+home_pose()
+
+# Code block 4
+home_pose()
+
+# Code block 5
+home_pose()
+
+# Code block 6
+# The object is already inside the target bin and gripper is released,
+# but the object has not fully settled (RELEASED_UNSTABLE).
+# Open gripper to advance simulation steps and allow the object to settle.
+open_gripper()
+
+# Code block 7
+home_pose()
+
+# Code block 8
+home_pose()
+
+# Code block 9
+home_pose()
+
+# Code block 10
+open_gripper()
+
+# Code block 11
+home_pose()
+
+
+Environment response:
+  Sandbox failed: 0
+  Stdout: 
+  Stderr: Static execution gate rejected code: generated code block is empty
+  Reward: 0.0
+  Task Completed: False
+  Terminated: False, Truncated: False
+  Num Regenerations: 11
+  Num Finishes: 0
+  Num Code Blocks: 12
+----------------------------------------------------------------------------------------------------

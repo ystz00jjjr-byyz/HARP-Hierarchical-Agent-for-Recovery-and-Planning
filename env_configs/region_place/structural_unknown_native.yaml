@@ -1,0 +1,89 @@
+env:
+  _target_: capx.envs.tasks.franka.franka_region_place.FrankaRegionPlaceCodeEnv
+  cfg:
+    _target_: capx.envs.tasks.base.CodeExecEnvConfig
+    low_level: franka_robosuite_bin_place_low_level
+    low_level_kwargs:
+      cube_half_sizes: 0.02,0.02,0.02
+      max_steps: 3200
+      scenario_sweep: true
+      object_shape: cuboid
+      target_mode: region
+      world_state_source: camera_rgbd
+      recovery_checkpoint_dir: ${oc.env:STRUCTURAL_UNKNOWN_CHECKPOINT_DIR,./outputs/structural_unknown_ab/checkpoints}
+      recovery_checkpoint_required: true
+    privileged: false
+    enable_render: true
+    apis: [FrankaMultiObjectSortRgbdApi]
+    prompt: |
+      Start from the supplied failed region-place state. Use only the provided
+      APIs and current observations to recover: place the primary object fully
+      inside the marked planar target region, release it gently, and leave the
+      gripper open. You may freely generate bounded robot-control Python code.
+      Do not access hidden simulator state or use unbounded loops.
+    multi_turn_prompt: |
+      Use the image, hard execution result, and nonprivileged RGB-D K=3 world
+      state. Return REGENERATE with bounded recovery Python, or FINISH only
+      when task_completed is explicitly true. Do not use hidden simulator
+      state or unbounded retries.
+
+api_servers:
+  - _target_: capx.serving.launch_sam3_server.main
+    device: cuda
+    port: 8114
+    host: 127.0.0.1
+    checkpoint_path: ${oc.env:SAM3_CHECKPOINT,./checkpoints/sam3.pt}
+  - _target_: capx.serving.launch_pyroki_server.main
+    port: 8116
+    host: 127.0.0.1
+    robot: panda_description
+    target_link: panda_hand
+
+record_video: true
+use_visual_feedback: true
+use_legacy_multi_turn_decision_prompt: false
+save_multiturn_prompts: true
+trials: 350
+num_workers: 1
+max_trial_retries: 1
+trial_timeout_seconds: 1000
+max_model_requests_per_trial: 5
+output_dir: ${oc.env:REGION_PLACE_OUTPUT_DIR,./outputs/structural_unknown_ab/native}
+
+world_state_recorder:
+  enabled: true
+  record_every_n_sim_steps: 10
+  record_rgb: false
+  record_depth: false
+  compress_arrays: true
+
+execution_guard:
+  enabled: true
+  reject_empty_code: true
+  max_robot_api_calls_per_block: 12
+  max_expensive_loop_iterations: 0
+  finish_requires_task_completed: true
+  max_decision_reprompts: 2
+
+text_world_state_feedback:
+  enabled: true
+  window_size: 3
+  min_stable_fraction: 0.6667
+  numeric_abs_tolerance: 0.015
+  numeric_rel_tolerance: 0.05
+  include_entities: false
+  fail_open: false
+  loop_guard_enabled: true
+  max_same_failure_retries: 2
+  min_progress_delta: 0.01
+  action_aligned_window: true
+  wait_for_stability: true
+  stability_wait_steps: 5
+  sample_sim_steps: 3
+
+metadata:
+  experiment: structural_unknown_region_place_same_checkpoint_ab
+  level: native_capx_free_recovery_code
+  seed_range: 301-350
+  model_authority: free_bounded_recovery_code
+  model_request_cap: 5

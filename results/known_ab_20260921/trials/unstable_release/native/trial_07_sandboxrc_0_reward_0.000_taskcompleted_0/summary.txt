@@ -1,0 +1,100 @@
+----------------------------------------------------------------------------------------------------
+Generated program:
+# Code block 0
+import numpy as np
+
+# Stage 1: Grasp and lift the primary object
+obj_pos, _, obj_extent = get_object_pose("red block", return_bbox_extent=True)
+grasp_pos, grasp_quat = sample_grasp_pose("red block")
+
+open_gripper()
+goto_pose(grasp_pos, grasp_quat, z_approach=0.1)
+close_gripper()
+
+lift_pos = grasp_pos + np.array([0.0, 0.0, 0.2])
+goto_pose(lift_pos, grasp_quat)
+
+# Code block 1
+import numpy as np
+
+# Stage 1: Grasp and lift the primary object
+obj_pos, obj_quat, obj_extent = get_object_pose('primary', return_bbox_extent=True)
+grasp_pos, grasp_quat = sample_grasp_pose('primary')
+
+open_gripper()
+goto_pose(grasp_pos, grasp_quat, z_approach=0.08)
+close_gripper()
+lift_pos = grasp_pos.copy()
+lift_pos[2] = 0.1
+goto_pose(lift_pos, grasp_quat)
+
+# Code block 2
+import numpy as np
+
+# Retrieve target region geometry
+target_pos, target_extent, _ = get_target_region('target')
+
+# Gripper down orientation
+quat = np.array([0.0, 0.0, 1.0, 0.0])
+
+# Move above the bin to safely clear the container rim
+hover_pos = np.array([target_pos[0], target_pos[1], 0.15])
+goto_pose(hover_pos, quat)
+
+# Descend into the target bin for a gentle release
+place_pos = np.array([target_pos[0], target_pos[1], target_pos[2] + 0.035])
+goto_pose(place_pos, quat)
+
+# Release the primary object
+open_gripper()
+
+# Retreat safely out of the bin
+goto_pose(hover_pos, quat)
+home_pose()
+
+# Code block 3
+home_pose()
+
+# Code block 4
+home_pose()
+
+# Code block 5
+home_pose()
+
+# Code block 6
+home_pose()
+
+# Code block 7
+home_pose()
+
+# Code block 8
+home_pose()
+
+# Code block 9
+open_gripper()
+
+# Code block 10
+home_pose()
+
+# Code block 11
+home_pose()
+
+
+Environment response:
+  Sandbox failed: 0
+  Stdout: 
+  Stderr: Traceback (most recent call last):
+  File "/home/byyz/桌面/cap-x-main/capx/envs/tasks/base.py", line 179, in _exec_user_code
+    exec(code, self._exec_globals, self._exec_globals)
+  File "<string>", line 4, in <module>
+  File "/home/byyz/桌面/cap-x-main/capx/integrations/franka/control_privileged.py", line 128, in get_object_pose
+    raise ValueError(f"Invalid object name: {object_name}")
+ValueError: Invalid object name: red block
+
+  Reward: 0.0
+  Task Completed: False
+  Terminated: False, Truncated: False
+  Num Regenerations: 11
+  Num Finishes: 0
+  Num Code Blocks: 12
+----------------------------------------------------------------------------------------------------

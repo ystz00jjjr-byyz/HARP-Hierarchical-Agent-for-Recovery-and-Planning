@@ -1,0 +1,542 @@
+metadata:
+  status: formal
+  task_family: bin_place_multi_shape
+  parameterization: role_size_target_region
+  validation:
+    date: 2026-09-19
+    nominal_evidence: outputs/bin_place_geometry_sweep_30_final_v8_20260919/offline_no-model
+    nominal_successes: 26
+    nominal_trials: 30
+    feasible_successes: 26
+    feasible_trials: 27
+    infeasible_safe_stops: 3
+    infeasible_trials: 3
+    policy_physics_agreements: 29
+    policy_physics_trials: 30
+    model_requests: 0
+    videos: 30
+    cylinder_stability_evidence: outputs/bin_place_cylinder_10seed_final_v13_20260919/offline_no-model/cylinder
+    cylinder_task_completed: 9
+    cylinder_trials: 10
+    cylinder_safe_stops: 1
+    cylinder_policy_physics_agreements: 10
+    cylinder_model_requests: 0
+    outside_container_successes: 8
+    outside_container_trials: 10
+    unstable_release_successes: 8
+    unstable_release_trials: 10
+    bin_entry_blocked_safe_stops: 10
+    bin_entry_blocked_trials: 10
+    model_fallback_successes: 1
+    model_fallback_trials: 1
+    promotion_decision: formal_bin_place_multi_shape
+initial: [stage_001]
+actions:
+  - id: stage_001
+    primitive: acquire_primary
+    parameters:
+      primary_pose: cube_poses_robot_base.primary
+      primary_extent: cube_extents_robot_base.primary
+    code: |
+      import numpy as np
+
+      primary_pose = np.asarray(_offline_params["primary_pose"], dtype=float)
+      primary_extent = np.asarray(_offline_params["primary_extent"], dtype=float)
+      primary_pos = primary_pose[:3]
+      primary_quat = primary_pose[3:7]
+      w, x, y, z = primary_quat / np.linalg.norm(primary_quat)
+      yaw = np.arctan2(2.0 * (w * z + x * y), 1.0 - 2.0 * (y * y + z * z))
+      primary_grasp_pos = primary_pos + np.array([
+          0.0, 0.0, max(0.004, 0.175 * float(primary_extent[2]))
+      ])
+      primary_grasp_quat = (
+          np.array([0.0, 0.0, 1.0, 0.0])
+          if float(np.max(primary_extent[:2]) / np.min(primary_extent[:2])) < 1.35
+          else np.array([0.0, -np.sin(0.5 * yaw), np.cos(0.5 * yaw), 0.0])
+      )
+      approach = max(0.08, 2.0 * float(primary_extent[2]))
+      lift = max(0.15, 3.0 * float(primary_extent[2]))
+      goto_pose(primary_grasp_pos, primary_grasp_quat, z_approach=approach)
+      close_gripper()
+      goto_pose(primary_grasp_pos + np.array([0.0, 0.0, lift]), primary_grasp_quat)
+    preconditions:
+      bin_policy_eligible: true
+      container_entry_clear: true
+    success_conditions:
+      target_grasped: true
+      object_lifted: true
+      wrong_object_grasped: false
+    failure_routes:
+      PRECONDITION_FAILED: BIN_ENTRY_BLOCKED
+      POSTCONDITION_FAILED: GRASP_MISS
+      SANDBOX_ERROR: GRASP_MISS
+    next: stage_002
+    metadata:
+      accept_semantic_stability: true
+      accept_semantic_failure: true
+      accept_semantic_success: true
+
+  - id: stage_002
+    primitive: place_primary_inside_bin
+    code: |
+      if "target_grasp_pos" in globals():
+          primary_grasp_pos = target_grasp_pos
+          primary_grasp_quat = target_grasp_quat
+          primary_pos = current_pos
+      target_center, target_extent, rim_z = get_target_region("target")
+      target_gripper = target_center + (primary_grasp_pos - primary_pos)
+      entry = target_gripper.copy()
+      entry[2] = max(
+          entry[2] + approach,
+          rim_z + 0.5 * float(primary_extent[2]) + 0.04,
+      )
+      goto_pose(entry, primary_grasp_quat)
+      goto_pose(target_gripper, primary_grasp_quat)
+      open_gripper()
+      goto_pose(entry, primary_grasp_quat)
+      open_gripper()
+    preconditions:
+      target_grasped: true
+      object_lifted: true
+      bin_policy_eligible: true
+    success_conditions:
+      object_inside_container: true
+      task_completed: true
+      gripper_open: true
+      object_stable: true
+    failure_routes:
+      PRECONDITION_FAILED: BIN_ENTRY_BLOCKED
+      POSTCONDITION_FAILED: OUTSIDE_TARGET_REGION
+      OBJECT_UNSTABLE: UNSTABLE_RELEASE
+    metadata:
+      accept_semantic_failure: true
+      accept_semantic_stability: true
+
+  - id: recover_bin_center_place
+    primitive: regrasp_at_current_pose
+    parameters:
+      primary_pose: cube_poses_robot_base.primary
+      primary_extent: cube_extents_robot_base.primary
+    code: |
+      import numpy as np
+
+      primary_pose = np.asarray(_offline_params["primary_pose"], dtype=float)
+      primary_extent = np.asarray(_offline_params["primary_extent"], dtype=float)
+      current_pos = primary_pose[:3]
+      current_quat = primary_pose[3:7]
+      w, x, y, z = current_quat / np.linalg.norm(current_quat)
+      yaw = np.arctan2(2.0 * (w * z + x * y), 1.0 - 2.0 * (y * y + z * z))
+      grasp_pos = current_pos + np.array([
+          0.0, 0.0, max(0.004, 0.175 * float(primary_extent[2]))
+      ])
+      grasp_quat = np.array([
+          0.0, -np.sin(0.5 * yaw), np.cos(0.5 * yaw), 0.0
+      ])
+      approach = max(0.08, 2.0 * float(primary_extent[2]))
+      lift = max(0.15, 3.0 * float(primary_extent[2]))
+      open_gripper()
+      goto_pose(grasp_pos, grasp_quat, z_approach=approach)
+      close_gripper()
+      goto_pose(grasp_pos + np.array([0.0, 0.0, lift]), grasp_quat)
+    preconditions:
+      bin_policy_eligible: true
+      container_entry_clear: true
+    success_conditions:
+      target_grasped: true
+      object_lifted: true
+      wrong_object_grasped: false
+    failure_routes:
+      PRECONDITION_FAILED: BIN_ENTRY_BLOCKED
+      POSTCONDITION_FAILED: GRASP_RECOVERY_FAILED
+      SANDBOX_ERROR: GRASP_RECOVERY_FAILED
+    next: recover_bin_center_replace
+    metadata:
+      status: formal
+      scope: bin_place
+      validation_threshold: 8/10
+      accept_semantic_stability: true
+      interrupt_on_failure: true
+
+  - id: reobserve_workspace_edge_primary
+    primitive: reobserve_primary_from_safe_pose
+    code: |
+      home_pose()
+      open_gripper()
+      observed_pos, observed_quat, observed_extent = get_object_pose(
+          "primary", return_bbox_extent=True
+      )
+    preconditions:
+      workspace_reachable: true
+      object_stable: true
+    success_conditions:
+      object_observation_ready: true
+      object_stable: true
+    failure_routes:
+      PRECONDITION_FAILED: WORKSPACE_EDGE_REOBSERVE_FAILED
+      POSTCONDITION_FAILED: WORKSPACE_EDGE_REOBSERVE_FAILED
+      SANDBOX_ERROR: WORKSPACE_EDGE_REOBSERVE_FAILED
+    next: recenter_workspace_edge_primary
+    metadata:
+      status: formal
+      scope: bin_place_workspace_edge
+      validation_threshold: 8/10
+      validated_successes: 10
+      validated_trials: 10
+      interrupt_on_failure: true
+      accept_semantic_stability: true
+
+  - id: candidate_reobserve_changed_target
+    primitive: reobserve_object_and_target_from_safe_pose
+    code: |
+      observed_pos, observed_quat, observed_extent = get_object_pose(
+          "primary", return_bbox_extent=True
+      )
+      observed_target_center, observed_target_extent, observed_rim_z = (
+          get_target_region("target")
+      )
+    preconditions:
+      target_grasped: true
+      object_stable: true
+    success_conditions:
+      object_observation_ready: true
+      target_observation_ready: true
+      object_stable: true
+    failure_routes:
+      PRECONDITION_FAILED: TARGET_REOBSERVE_FAILED
+      POSTCONDITION_FAILED: TARGET_REOBSERVE_FAILED
+      SANDBOX_ERROR: TARGET_REOBSERVE_FAILED
+    next: candidate_rebind_changed_target
+    metadata:
+      status: formal
+      scope: bin_place_target_position_changed
+      handles_exception: TARGET_POSITION_CHANGED
+      validation_threshold: 8/10
+      validated_successes: 10
+      validated_trials: 10
+      interrupt_on_failure: true
+      accept_semantic_stability: true
+
+  - id: candidate_rebind_changed_target
+    primitive: bind_latest_target_geometry
+    code: |
+      target_center, target_extent, rim_z = get_target_region("target")
+    preconditions:
+      target_observation_ready: true
+    success_conditions:
+      target_observation_ready: true
+    failure_routes:
+      PRECONDITION_FAILED: TARGET_REBIND_FAILED
+      POSTCONDITION_FAILED: TARGET_REBIND_FAILED
+      SANDBOX_ERROR: TARGET_REBIND_FAILED
+    next: stage_002
+    metadata:
+      status: formal
+      scope: bin_place_target_position_changed
+      handles_exception: TARGET_POSITION_CHANGED
+      validation_threshold: 8/10
+      validated_successes: 10
+      validated_trials: 10
+      interrupt_on_failure: true
+
+  - id: candidate_reobserve_out_of_workspace
+    primitive: reobserve_out_of_workspace_object
+    code: |
+      home_pose()
+      open_gripper()
+      observed_pos, observed_quat, observed_extent = get_object_pose(
+          "primary", return_bbox_extent=True
+      )
+    preconditions:
+      object_stable: true
+    success_conditions:
+      object_observation_ready: true
+      object_stable: true
+    failure_routes:
+      PRECONDITION_FAILED: WORKSPACE_REOBSERVE_FAILED
+      POSTCONDITION_FAILED: WORKSPACE_REOBSERVE_FAILED
+      SANDBOX_ERROR: WORKSPACE_REOBSERVE_FAILED
+    next: candidate_check_workspace_recovery
+    metadata:
+      status: formal
+      scope: bin_place_object_out_of_workspace
+      handles_exception: OBJECT_OUT_OF_WORKSPACE
+      validation_threshold: 8/10
+      validated_successes: 9
+      validated_trials: 10
+      interrupt_on_failure: true
+      accept_semantic_stability: true
+
+  - id: candidate_check_workspace_recovery
+    primitive: bounded_workspace_reachability_check
+    code: |
+      pass
+    preconditions:
+      workspace_recovery_feasible: true
+      object_stable: true
+    success_conditions:
+      workspace_recovery_feasible: true
+      object_observation_ready: true
+    failure_routes:
+      PRECONDITION_FAILED: OBJECT_OUT_OF_WORKSPACE_UNRECOVERABLE
+      POSTCONDITION_FAILED: OBJECT_OUT_OF_WORKSPACE_UNRECOVERABLE
+    next: candidate_move_primary_into_workspace
+    metadata:
+      status: formal
+      scope: bin_place_object_out_of_workspace
+      handles_exception: OBJECT_OUT_OF_WORKSPACE
+      validation_threshold: 8/10
+      validated_successes: 9
+      validated_trials: 10
+      interrupt_on_failure: true
+
+  - id: candidate_move_primary_into_workspace
+    primitive: push_primary_to_safe_workspace
+    parameters:
+      primary_pose: cube_poses_robot_base.primary
+      primary_extent: cube_extents_robot_base.primary
+    code: |
+      import numpy as np
+
+      primary_pose = np.asarray(_offline_params["primary_pose"], dtype=float)
+      primary_extent = np.asarray(_offline_params["primary_extent"], dtype=float)
+      current_pos = primary_pose[:3]
+      workspace_was_pushed = abs(float(current_pos[1])) >= 0.27
+      if workspace_was_pushed:
+          inward_y = -np.sign(current_pos[1])
+          push_quat = np.array([0.0, 0.0, 1.0, 0.0])
+          tool_z = current_pos[2] + max(0.004, 0.175 * float(primary_extent[2]))
+          push_start = current_pos + np.array([
+              0.0,
+              -inward_y * (0.5 * float(primary_extent[1]) + 0.025),
+              tool_z - current_pos[2],
+          ])
+          push_distance = abs(float(current_pos[1])) - 0.20
+          push_end = current_pos + np.array([
+              0.0, inward_y * push_distance, tool_z - current_pos[2]
+          ])
+          home_pose()
+          close_gripper()
+          goto_pose(push_start, push_quat, z_approach=0.08)
+          goto_pose(push_end, push_quat)
+          home_pose()
+          open_gripper()
+    preconditions:
+      workspace_recovery_feasible: true
+      object_stable: true
+    success_conditions:
+      object_inside_nominal_workspace: true
+      object_near_workspace_boundary: false
+      object_stable: true
+    failure_routes:
+      PRECONDITION_FAILED: OBJECT_OUT_OF_WORKSPACE_UNRECOVERABLE
+      POSTCONDITION_FAILED: WORKSPACE_MOVE_FAILED
+      SANDBOX_ERROR: WORKSPACE_MOVE_FAILED
+    next: candidate_regrasp_workspace_primary
+    metadata:
+      status: formal
+      scope: bin_place_object_out_of_workspace
+      handles_exception: OBJECT_OUT_OF_WORKSPACE
+      validation_threshold: 8/10
+      validated_successes: 9
+      validated_trials: 10
+      interrupt_on_failure: true
+      accept_semantic_stability: true
+
+  - id: candidate_regrasp_workspace_primary
+    primitive: regrasp_after_workspace_recovery
+    parameters:
+      primary_pose: cube_poses_robot_base.primary
+      primary_extent: cube_extents_robot_base.primary
+    code: |
+      import numpy as np
+
+      primary_pose = np.asarray(_offline_params["primary_pose"], dtype=float)
+      primary_extent = np.asarray(_offline_params["primary_extent"], dtype=float)
+      current_pos = primary_pose[:3]
+      current_quat = primary_pose[3:7]
+      w, x, y, z = current_quat / np.linalg.norm(current_quat)
+      yaw = np.arctan2(2.0 * (w * z + x * y), 1.0 - 2.0 * (y * y + z * z))
+      grasp_pos = current_pos + np.array([
+          0.0, 0.0, max(0.004, 0.175 * float(primary_extent[2]))
+      ])
+      grasp_quat = (
+          np.array([0.0, -np.sin(0.5 * yaw), np.cos(0.5 * yaw), 0.0])
+          if workspace_was_pushed
+          else np.array([0.0, 0.0, 1.0, 0.0])
+      )
+      approach = max(0.08, 2.0 * float(primary_extent[2]))
+      lift = max(0.15, 3.0 * float(primary_extent[2]))
+      open_gripper()
+      goto_pose(grasp_pos, grasp_quat, z_approach=approach)
+      close_gripper()
+      goto_pose(grasp_pos + np.array([0.0, 0.0, lift]), grasp_quat)
+    preconditions:
+      object_inside_nominal_workspace: true
+      object_stable: true
+    success_conditions:
+      target_grasped: true
+      object_lifted: true
+      wrong_object_grasped: false
+    failure_routes:
+      PRECONDITION_FAILED: WORKSPACE_REGRASP_FAILED
+      POSTCONDITION_FAILED: WORKSPACE_REGRASP_FAILED
+      SANDBOX_ERROR: WORKSPACE_REGRASP_FAILED
+    next: recover_bin_center_replace
+    metadata:
+      status: formal
+      scope: bin_place_object_out_of_workspace
+      handles_exception: OBJECT_OUT_OF_WORKSPACE
+      validation_threshold: 8/10
+      validated_successes: 9
+      validated_trials: 10
+      interrupt_on_failure: true
+      accept_semantic_stability: true
+
+  - id: recenter_workspace_edge_primary
+    primitive: push_primary_toward_workspace_center
+    parameters:
+      primary_pose: cube_poses_robot_base.primary
+      primary_extent: cube_extents_robot_base.primary
+    code: |
+      import numpy as np
+
+      primary_pose = np.asarray(_offline_params["primary_pose"], dtype=float)
+      primary_extent = np.asarray(_offline_params["primary_extent"], dtype=float)
+      current_pos = primary_pose[:3]
+      inward_y = -np.sign(current_pos[1]) if current_pos[1] != 0.0 else 1.0
+      push_quat = np.array([0.0, 0.0, 1.0, 0.0])
+      tool_z = current_pos[2] + max(0.004, 0.175 * float(primary_extent[2]))
+      push_start = current_pos + np.array([
+          0.0,
+          -inward_y * (0.5 * float(primary_extent[1]) + 0.025),
+          tool_z - current_pos[2],
+      ])
+      push_end = current_pos + np.array([0.0, inward_y * 0.07, tool_z - current_pos[2]])
+      home_pose()
+      close_gripper()
+      goto_pose(push_start, push_quat, z_approach=0.08)
+      goto_pose(push_end, push_quat)
+      home_pose()
+      open_gripper()
+    preconditions:
+      object_near_workspace_boundary: true
+      workspace_reachable: true
+      object_stable: true
+    success_conditions:
+      object_near_workspace_boundary: false
+      object_stable: true
+    failure_routes:
+      PRECONDITION_FAILED: WORKSPACE_EDGE_RECENTER_FAILED
+      POSTCONDITION_FAILED: WORKSPACE_EDGE_RECENTER_FAILED
+      SANDBOX_ERROR: WORKSPACE_EDGE_RECENTER_FAILED
+    next: recover_bin_center_place
+    metadata:
+      status: formal
+      scope: bin_place_workspace_edge
+      validation_threshold: 8/10
+      validated_successes: 10
+      validated_trials: 10
+      interrupt_on_failure: true
+      accept_semantic_stability: true
+
+  - id: recover_bin_center_replace
+    primitive: replace_at_bin_center
+    code: |
+      target_center, target_extent, rim_z = get_target_region("target")
+      target_object_center = target_center.copy()
+      target_object_center[2] += 0.5 * float(primary_extent[2])
+      target_gripper = target_object_center + (grasp_pos - current_pos)
+      entry = target_gripper.copy()
+      entry[2] = max(rim_z + 0.08, target_gripper[2] + 0.08)
+      goto_pose(entry, grasp_quat)
+      goto_pose(target_gripper, grasp_quat)
+      open_gripper()
+    preconditions:
+      target_grasped: true
+      object_lifted: true
+      wrong_object_grasped: false
+    success_conditions:
+      object_inside_container: true
+      task_completed: true
+      gripper_open: true
+      object_stable: true
+    failure_routes:
+      PRECONDITION_FAILED: GRASP_RECOVERY_FAILED
+      POSTCONDITION_FAILED: BIN_PLACE_RECOVERY_FAILED
+      OBJECT_UNSTABLE: BIN_PLACE_RECOVERY_FAILED
+      SANDBOX_ERROR: BIN_PLACE_RECOVERY_FAILED
+    metadata:
+      status: formal
+      scope: bin_place
+      terminal_release: true
+      accept_semantic_stability: true
+
+  - id: recover_bin_grasp_replan
+    primitive: replan_grasp_from_current_rgbd
+    parameters:
+      primary_pose: cube_poses_robot_base.primary
+      primary_extent: cube_extents_robot_base.primary
+    code: |
+      import numpy as np
+
+      primary_pose = np.asarray(_offline_params["primary_pose"], dtype=float)
+      primary_extent = np.asarray(_offline_params["primary_extent"], dtype=float)
+      current_pos = primary_pose[:3]
+      approach = max(0.08, 2.0 * float(primary_extent[2]))
+      lift = max(0.15, 3.0 * float(primary_extent[2]))
+      baseline_z = float(current_pos[2])
+      current_quat = primary_pose[3:7]
+      w, x, y, z = current_quat / np.linalg.norm(current_quat)
+      yaw = np.arctan2(2.0 * (w * z + x * y), 1.0 - 2.0 * (y * y + z * z))
+      topdown_quat = (
+          np.array([0.0, 0.0, 1.0, 0.0])
+          if float(np.max(primary_extent[:2]) / np.min(primary_extent[:2])) < 1.35
+          else np.array([0.0, -np.sin(0.5 * yaw), np.cos(0.5 * yaw), 0.0])
+      )
+      for attempt in range(2):
+          if attempt == 0:
+              grasp_pos = current_pos + np.array([
+                  0.0, 0.0, max(0.004, 0.175 * float(primary_extent[2]))
+              ])
+              grasp_quat = topdown_quat
+          else:
+              grasp_pos, grasp_quat = sample_grasp_pose("primary")
+          home_pose()
+          open_gripper()
+          goto_pose(grasp_pos, grasp_quat, z_approach=approach)
+          close_gripper()
+          goto_pose(grasp_pos + np.array([0.0, 0.0, lift]), grasp_quat)
+          target_grasp_pos = grasp_pos
+          target_grasp_quat = grasp_quat
+          observed_pos, _, _ = get_object_pose("primary", return_bbox_extent=True)
+          if float(observed_pos[2]) >= baseline_z + max(0.04, float(primary_extent[2])):
+              break
+    preconditions:
+      bin_policy_eligible: true
+    success_conditions:
+      target_grasped: true
+      object_lifted: true
+      wrong_object_grasped: false
+    failure_routes:
+      PRECONDITION_FAILED: BIN_ENTRY_BLOCKED
+      POSTCONDITION_FAILED: BIN_GRASP_REPLAN_FAILED
+      SANDBOX_ERROR: BIN_GRASP_REPLAN_FAILED
+    next: stage_002
+    metadata:
+      status: formal
+      scope: bin_place_multi_shape
+      validation_evidence: outputs/bin_place_geometry_sweep_30_final_v8_20260919/offline_no-model
+      grasp_pose_source: current_pose_then_live_contact_graspnet
+      accept_semantic_stability: true
+      accept_semantic_failure: true
+      accept_semantic_success: true
+
+  - id: recover_budget_safe_stop
+    primitive: safe_stop
+    code: |
+      open_gripper()
+    success_conditions:
+      gripper_open: true
+    metadata:
+      status: formal
+      terminal: safe_stop

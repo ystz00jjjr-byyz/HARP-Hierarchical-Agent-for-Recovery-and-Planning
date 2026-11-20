@@ -1,0 +1,18 @@
+metadata:
+  status: candidate_failed_validation
+  task_family: multi_object_sort
+  candidate: four_object_cross_task_composition_v1
+  expected_model_requests: 0
+  disposition: do_not_promote
+
+recovery_library:
+  ROLE_BINDING_ERROR:
+    - candidate_cross_task_role_rebind
+  GRASP_MISS:
+    - candidate_cross_task_edge_push_margin_gate
+  PLACE_FAILED:
+    - candidate_cross_task_edge_push_margin_gate
+  FOUR_OBJECT_SORT_INCOMPLETE:
+    - candidate_grasp_primary
+  RECOVERY_BUDGET_LOW:
+    - recover_budget_safe_stop

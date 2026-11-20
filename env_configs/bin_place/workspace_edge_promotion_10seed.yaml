@@ -1,0 +1,65 @@
+env:
+  _target_: capx.envs.tasks.franka.franka_bin_place.FrankaBinPlaceCodeEnv
+  cfg:
+    _target_: capx.envs.tasks.base.CodeExecEnvConfig
+    low_level: franka_robosuite_bin_place_low_level
+    low_level_kwargs:
+      cube_half_sizes: 0.02,0.02,0.02
+      max_steps: 2000
+      workspace_edge_sweep: true
+      scenario_seed: ${oc.env:BIN_PLACE_SCENARIO_SEED,''}
+      inject_first_grasp_miss: true
+      inject_primary_release_failures: ${oc.env:BIN_PLACE_RELEASE_FAILURES,0}
+      inject_first_primary_release_unstable: ${oc.env:BIN_PLACE_RELEASE_UNSTABLE,false}
+    privileged: true
+    enable_render: true
+    apis: [FrankaControlPrivilegedApi]
+
+api_servers:
+  - _target_: capx.serving.launch_pyroki_server.main
+    port: 8116
+    host: 127.0.0.1
+    robot: panda_description
+    target_link: panda_hand
+
+record_video: true
+trials: 10
+num_workers: 1
+max_trial_retries: 1
+trial_timeout_seconds: 1000
+output_dir: ${oc.env:BIN_PLACE_OUTPUT_DIR,./outputs/bin_place_workspace_edge_promotion_10seed_20260920}
+
+world_state_recorder:
+  enabled: true
+  record_every_n_sim_steps: 10
+  record_rgb: false
+  record_depth: false
+  compress_arrays: true
+
+execution_guard:
+  enabled: true
+  reject_empty_code: true
+  max_robot_api_calls_per_block: 9
+  max_expensive_loop_iterations: 0
+  finish_requires_task_completed: true
+
+offline_recovery:
+  enabled: true
+  task_graph: env_configs/bin_place/offline_task_graph.yaml
+  action_library: env_configs/recovery/grasp_miss_actions.yaml
+  recovery_library: env_configs/bin_place/recovery_library.yaml
+  k_action: 3
+  k_state: 3
+  min_stable_fraction: 0.6667
+  state_sampling:
+    enabled: true
+    window_size: 3
+    min_stable_fraction: 0.6667
+    numeric_abs_tolerance: 0.015
+    numeric_rel_tolerance: 0.05
+    include_entities: false
+    fail_open: false
+    action_aligned_window: true
+    wait_for_stability: true
+    stability_wait_steps: 5
+    sample_sim_steps: 3

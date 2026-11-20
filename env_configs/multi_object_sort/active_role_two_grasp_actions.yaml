@@ -1,0 +1,171 @@
+metadata:
+  status: mixed
+  task_family: multi_object_sort
+  candidate: active_role_two_orthogonal_grasps_v1
+  max_attempts_per_candidate: 1
+  model_requests: 0
+  formal_exceptions: [GRASP_MISS]
+  candidate_exceptions: [ROLE_BINDING_ERROR]
+  promotion_gate:
+    directed_seeds: [94, 95, 96]
+    directed_successes: 3
+    unseen_seeds: [101, 102, 103, 104, 105, 106, 107, 108, 109, 110]
+    unseen_successes: 10
+    minimum_unseen_successes: 8
+    model_requests: 0
+    promoted_on: 2026-10-09
+
+actions:
+  - id: candidate_active_role_rebind
+    primitive: rgbd_role_rebind
+    code: |
+      home_pose()
+      open_gripper()
+      rebind_roles()
+    success_conditions:
+      wrong_role_binding: false
+      object_observation_ready: true
+      target_observation_ready: true
+    next: candidate_active_role_reobserve
+    metadata: &bounded_candidate
+      status: candidate
+      observation_refresh: true
+      interrupt_on_failure: true
+      max_attempts: 1
+      failure_next_action: recover_budget_safe_stop
+      precondition_failure_next_action: recover_budget_safe_stop
+
+  - id: candidate_active_role_reobserve
+    primitive: reobserve_current_incomplete_role
+    parameters:
+      role: active_object_role
+    code: &reobserve_code |
+      role = str(_offline_params["role"])
+      home_pose()
+      open_gripper()
+      get_object_pose(role, return_bbox_extent=True)
+      get_target_region("target_" + role)
+    success_conditions:
+      measurement_fresh: true
+      object_observation_ready: true
+      target_observation_ready: true
+      object_stable: true
+    next: candidate_active_role_grasp_primary_axis
+    metadata: &bounded_formal
+      status: formal
+      observation_refresh: true
+      interrupt_on_failure: true
+      max_attempts: 1
+      failure_next_action: recover_budget_safe_stop
+      precondition_failure_next_action: recover_budget_safe_stop
+
+  - id: candidate_active_role_grasp_primary_axis
+    primitive: grasp_current_role_candidate_0
+    parameters:
+      role: active_object_role
+    code: |
+      import numpy as np
+
+      role = str(_offline_params["role"])
+      recovery_target, _, _ = get_target_region("target_" + role)
+      recovery_grasp, recovery_quat, recovery_extent = (
+          sample_cuboid_grasp_plan(role, 0)
+      )
+      recovery_clearance = max(0.08, 2.0 * float(recovery_extent[2]))
+      goto_pose(recovery_grasp, recovery_quat, z_approach=recovery_clearance)
+      close_gripper()
+      goto_pose(recovery_grasp + np.array([0.0, 0.0, 0.15]), recovery_quat)
+    success_conditions:
+      target_grasped: true
+      object_lifted: true
+      wrong_object_grasped: false
+    next: candidate_active_role_replace_primary_axis
+    metadata:
+      <<: *bounded_formal
+      observation_refresh: false
+      failure_next_action: candidate_active_role_reobserve_orthogonal
+
+  - id: candidate_active_role_replace_primary_axis
+    primitive: replace_current_role_candidate_0
+    parameters:
+      role: active_object_role
+    code: &replace_code |
+      import numpy as np
+
+      role = str(_offline_params["role"])
+      recovery_depth = float(np.clip(0.20 * recovery_extent[2], 0.004, 0.008))
+      recovery_place = recovery_target + np.array([
+          0.0, 0.0, -recovery_depth
+      ])
+      goto_pose(
+          recovery_place + np.array([0.0, 0.0, recovery_clearance]),
+          recovery_quat,
+      )
+      goto_pose(recovery_place, recovery_quat)
+      open_gripper()
+      goto_pose(
+          recovery_place + np.array([0.0, 0.0, recovery_clearance]),
+          recovery_quat,
+      )
+      home_pose()
+    success_conditions:
+      last_released_role_at_target: true
+      gripper_open: true
+      object_stable: true
+    next: candidate_active_role_reobserve
+    metadata:
+      <<: *bounded_formal
+      observation_refresh: false
+      failure_next_action: candidate_active_role_reobserve_orthogonal
+
+  - id: candidate_active_role_reobserve_orthogonal
+    primitive: reobserve_before_orthogonal_candidate
+    parameters:
+      role: active_object_role
+    code: *reobserve_code
+    success_conditions:
+      measurement_fresh: true
+      object_observation_ready: true
+      target_observation_ready: true
+      object_stable: true
+    next: candidate_active_role_grasp_orthogonal
+    metadata: *bounded_formal
+
+  - id: candidate_active_role_grasp_orthogonal
+    primitive: grasp_current_role_candidate_1
+    parameters:
+      role: active_object_role
+    code: |
+      import numpy as np
+
+      role = str(_offline_params["role"])
+      recovery_target, _, _ = get_target_region("target_" + role)
+      recovery_grasp, recovery_quat, recovery_extent = (
+          sample_cuboid_grasp_plan(role, 1)
+      )
+      recovery_clearance = max(0.08, 2.0 * float(recovery_extent[2]))
+      goto_pose(recovery_grasp, recovery_quat, z_approach=recovery_clearance)
+      close_gripper()
+      goto_pose(recovery_grasp + np.array([0.0, 0.0, 0.15]), recovery_quat)
+    success_conditions:
+      target_grasped: true
+      object_lifted: true
+      wrong_object_grasped: false
+    next: candidate_active_role_replace_orthogonal
+    metadata:
+      <<: *bounded_formal
+      observation_refresh: false
+
+  - id: candidate_active_role_replace_orthogonal
+    primitive: replace_current_role_candidate_1
+    parameters:
+      role: active_object_role
+    code: *replace_code
+    success_conditions:
+      last_released_role_at_target: true
+      gripper_open: true
+      object_stable: true
+    next: candidate_active_role_reobserve
+    metadata:
+      <<: *bounded_formal
+      observation_refresh: false

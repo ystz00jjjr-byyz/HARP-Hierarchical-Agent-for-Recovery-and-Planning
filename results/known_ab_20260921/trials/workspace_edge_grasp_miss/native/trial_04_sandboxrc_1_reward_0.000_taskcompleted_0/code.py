@@ -1,0 +1,51 @@
+# Code block 0
+# Stage 1: Grasp and lift the primary object
+obj_pos, _, obj_extent = get_object_pose("red block", return_bbox_extent=True)
+target_pos, target_extent, target_yaw = get_target_region()
+
+grasp_pos, grasp_quat = sample_grasp_pose("red block")
+
+open_gripper()
+goto_pose(grasp_pos, grasp_quat, z_approach=0.1)
+close_gripper()
+
+lift_pos = grasp_pos.copy()
+lift_pos[2] += 0.25
+goto_pose(lift_pos, grasp_quat)
+
+# Code block 1
+import numpy as np
+
+# Stage 1: Grasp and lift the primary object
+try:
+    obj_pos, _, obj_extent = get_object_pose("primary", return_bbox_extent=True)
+    grasp_pos, grasp_quat = sample_grasp_pose("primary")
+except Exception:
+    obj_pos, _, obj_extent = get_object_pose("primary object", return_bbox_extent=True)
+    grasp_pos, grasp_quat = sample_grasp_pose("primary object")
+
+target_pos, target_extent, _ = get_target_region("target")
+
+open_gripper()
+goto_pose(grasp_pos, grasp_quat, z_approach=0.15)
+close_gripper()
+
+lift_pos = grasp_pos.copy()
+lift_pos[2] += 0.2
+goto_pose(lift_pos, grasp_quat)
+
+# Code block 2
+# Stage 2: Enter the bin, release, and retreat
+above_target = np.array([target_pos[0], target_pos[1], lift_pos[2]])
+goto_pose(above_target, grasp_quat)
+
+place_pos = target_pos.copy()
+if obj_extent is not None:
+    place_pos[2] += obj_extent[2] / 2.0 + 0.01
+else:
+    place_pos[2] += 0.03
+
+goto_pose(place_pos, grasp_quat)
+open_gripper()
+
+goto_pose(above_target, grasp_quat)

@@ -1,0 +1,178 @@
+metadata:
+  status: formal
+  task_family: multi_object_sort
+  candidate: four_role_sequential_finish_v1
+  max_attempts_per_action: 1
+  promotion_gate: {smoke_minimum_successes: 4, smoke_trials: 5, unseen_minimum_successes: 8, unseen_trials: 10}
+  validation:
+    promoted_at: 2026-10-09
+    smoke: {seeds: 61-65, task_completed: 5, trials: 5}
+    unseen: {seeds: 71-80, task_completed: 9, trials: 10}
+    unseen_outcomes: {direct_success: 6, policy_recovery_success: 3, safe_stop: 1}
+    known_residual_failure: seed_79_secondary_replace
+
+initial: [stage_001]
+
+actions:
+  - id: stage_001
+    primitive: model_generated_four_object_sort
+    code: "pass"
+    success_conditions: {task_completed: true}
+    failure_routes:
+      POSTCONDITION_FAILED: FOUR_OBJECT_SORT_INCOMPLETE
+      SANDBOX_ERROR: FOUR_OBJECT_SORT_INCOMPLETE
+
+  - id: candidate_grasp_primary
+    primitive: rgbd_regrasp_primary
+    code: |
+      import numpy as np
+      primary_pos, _, primary_extent = get_object_pose("primary", return_bbox_extent=True)
+      primary_grasp, primary_quat = sample_grasp_pose("primary")
+      primary_clearance = max(0.08, 2.0 * float(primary_extent[2]))
+      goto_pose(primary_grasp, primary_quat, z_approach=primary_clearance)
+      close_gripper()
+      goto_pose(primary_grasp + np.array([0.0, 0.0, 0.15]), primary_quat)
+    success_conditions: {active_grasp_role: primary, target_grasped: true, object_lifted: true, wrong_object_grasped: false}
+    next: candidate_replace_primary
+    metadata: &bounded_primary
+      status: formal
+      skip_if_conditions: {objects_at_targets.primary: true}
+      observation_refresh: true
+      interrupt_on_failure: true
+      max_attempts: 1
+      failure_next_action: recover_budget_safe_stop
+
+  - id: candidate_replace_primary
+    primitive: rgbd_replace_primary
+    code: |
+      import numpy as np
+      primary_target, _, _ = get_target_region("target_primary")
+      primary_xy_offset = np.clip(primary_grasp[:2] - primary_pos[:2], -0.01, 0.01)
+      primary_depth = float(np.clip(0.20 * primary_extent[2], 0.004, 0.008))
+      primary_place = primary_target + np.array([primary_xy_offset[0], primary_xy_offset[1], -primary_depth])
+      goto_pose(primary_place + np.array([0.0, 0.0, primary_clearance]), primary_quat)
+      goto_pose(primary_place, primary_quat)
+      open_gripper()
+      goto_pose(primary_place + np.array([0.0, 0.0, primary_clearance]), primary_quat)
+      home_pose()
+    success_conditions: {objects_at_targets.primary: true, gripper_open: true, object_stable: true}
+    next: candidate_grasp_secondary
+    metadata: *bounded_primary
+
+  - id: candidate_grasp_secondary
+    primitive: rgbd_regrasp_secondary
+    code: |
+      import numpy as np
+      secondary_pos, _, secondary_extent = get_object_pose("secondary", return_bbox_extent=True)
+      secondary_grasp, secondary_quat = sample_grasp_pose("secondary")
+      secondary_clearance = max(0.08, 2.0 * float(secondary_extent[2]))
+      goto_pose(secondary_grasp, secondary_quat, z_approach=secondary_clearance)
+      close_gripper()
+      goto_pose(secondary_grasp + np.array([0.0, 0.0, 0.15]), secondary_quat)
+    success_conditions: {active_grasp_role: secondary, target_grasped: true, object_lifted: true, wrong_object_grasped: false}
+    next: candidate_replace_secondary
+    metadata: &bounded_secondary
+      status: formal
+      skip_if_conditions: {objects_at_targets.secondary: true}
+      observation_refresh: true
+      interrupt_on_failure: true
+      max_attempts: 1
+      failure_next_action: recover_budget_safe_stop
+
+  - id: candidate_replace_secondary
+    primitive: rgbd_replace_secondary
+    code: |
+      import numpy as np
+      secondary_target, _, _ = get_target_region("target_secondary")
+      secondary_xy_offset = np.clip(secondary_grasp[:2] - secondary_pos[:2], -0.01, 0.01)
+      secondary_depth = float(np.clip(0.20 * secondary_extent[2], 0.004, 0.008))
+      secondary_place = secondary_target + np.array([secondary_xy_offset[0], secondary_xy_offset[1], -secondary_depth])
+      goto_pose(secondary_place + np.array([0.0, 0.0, secondary_clearance]), secondary_quat)
+      goto_pose(secondary_place, secondary_quat)
+      open_gripper()
+      goto_pose(secondary_place + np.array([0.0, 0.0, secondary_clearance]), secondary_quat)
+      home_pose()
+    success_conditions: {objects_at_targets.secondary: true, gripper_open: true, object_stable: true}
+    next: candidate_grasp_tertiary
+    metadata: *bounded_secondary
+
+  - id: candidate_grasp_tertiary
+    primitive: rgbd_regrasp_tertiary
+    code: |
+      import numpy as np
+      tertiary_pos, _, tertiary_extent = get_object_pose("tertiary", return_bbox_extent=True)
+      tertiary_grasp, tertiary_quat = sample_grasp_pose("tertiary")
+      tertiary_clearance = max(0.08, 2.0 * float(tertiary_extent[2]))
+      goto_pose(tertiary_grasp, tertiary_quat, z_approach=tertiary_clearance)
+      close_gripper()
+      goto_pose(tertiary_grasp + np.array([0.0, 0.0, 0.15]), tertiary_quat)
+    success_conditions: {active_grasp_role: tertiary, target_grasped: true, object_lifted: true, wrong_object_grasped: false}
+    next: candidate_replace_tertiary
+    metadata: &bounded_tertiary
+      status: formal
+      skip_if_conditions: {objects_at_targets.tertiary: true}
+      observation_refresh: true
+      interrupt_on_failure: true
+      max_attempts: 1
+      failure_next_action: recover_budget_safe_stop
+
+  - id: candidate_replace_tertiary
+    primitive: rgbd_replace_tertiary
+    code: |
+      import numpy as np
+      tertiary_target, _, _ = get_target_region("target_tertiary")
+      tertiary_xy_offset = np.clip(tertiary_grasp[:2] - tertiary_pos[:2], -0.01, 0.01)
+      tertiary_depth = float(np.clip(0.20 * tertiary_extent[2], 0.004, 0.008))
+      tertiary_place = tertiary_target + np.array([tertiary_xy_offset[0], tertiary_xy_offset[1], -tertiary_depth])
+      goto_pose(tertiary_place + np.array([0.0, 0.0, tertiary_clearance]), tertiary_quat)
+      goto_pose(tertiary_place, tertiary_quat)
+      open_gripper()
+      goto_pose(tertiary_place + np.array([0.0, 0.0, tertiary_clearance]), tertiary_quat)
+      home_pose()
+    success_conditions: {objects_at_targets.tertiary: true, gripper_open: true, object_stable: true}
+    next: candidate_grasp_quaternary
+    metadata: *bounded_tertiary
+
+  - id: candidate_grasp_quaternary
+    primitive: rgbd_regrasp_quaternary
+    code: |
+      import numpy as np
+      quaternary_pos, _, quaternary_extent = get_object_pose("quaternary", return_bbox_extent=True)
+      quaternary_grasp, quaternary_quat = sample_grasp_pose("quaternary")
+      quaternary_clearance = max(0.08, 2.0 * float(quaternary_extent[2]))
+      goto_pose(quaternary_grasp, quaternary_quat, z_approach=quaternary_clearance)
+      close_gripper()
+      goto_pose(quaternary_grasp + np.array([0.0, 0.0, 0.15]), quaternary_quat)
+    success_conditions: {active_grasp_role: quaternary, target_grasped: true, object_lifted: true, wrong_object_grasped: false}
+    next: candidate_replace_quaternary
+    metadata: &bounded_quaternary
+      status: formal
+      skip_if_conditions: {objects_at_targets.quaternary: true}
+      observation_refresh: true
+      interrupt_on_failure: true
+      max_attempts: 1
+      failure_next_action: recover_budget_safe_stop
+
+  - id: candidate_replace_quaternary
+    primitive: rgbd_replace_quaternary
+    code: |
+      import numpy as np
+      quaternary_target, _, _ = get_target_region("target_quaternary")
+      quaternary_xy_offset = np.clip(quaternary_grasp[:2] - quaternary_pos[:2], -0.01, 0.01)
+      quaternary_depth = float(np.clip(0.20 * quaternary_extent[2], 0.004, 0.008))
+      quaternary_place = quaternary_target + np.array([quaternary_xy_offset[0], quaternary_xy_offset[1], -quaternary_depth])
+      goto_pose(quaternary_place + np.array([0.0, 0.0, quaternary_clearance]), quaternary_quat)
+      goto_pose(quaternary_place, quaternary_quat)
+      open_gripper()
+      goto_pose(quaternary_place + np.array([0.0, 0.0, quaternary_clearance]), quaternary_quat)
+      home_pose()
+    success_conditions: {task_completed: true, objects_at_targets.quaternary: true, gripper_open: true, object_stable: true}
+    metadata: *bounded_quaternary
+
+  - id: recover_budget_safe_stop
+    primitive: recover_budget_safe_stop
+    code: |
+      home_pose()
+      open_gripper()
+    success_conditions: {gripper_open: true}
+    metadata: {status: formal, terminal: safe_stop, max_attempts: 1}

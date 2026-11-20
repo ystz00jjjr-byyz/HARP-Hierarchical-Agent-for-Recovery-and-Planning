@@ -1,0 +1,63 @@
+diff --git a/robosuite/environments/manipulation/stack.py b/robosuite/environments/manipulation/stack.py
+index 5ad484f..c3232e2 100644
+--- a/robosuite/environments/manipulation/stack.py
++++ b/robosuite/environments/manipulation/stack.py
+@@ -4,7 +4,7 @@ import numpy as np
+ 
+ from robosuite.environments.manipulation.manipulation_env import ManipulationEnv
+ from robosuite.models.arenas import TableArena
+-from robosuite.models.objects import BoxObject
++from robosuite.models.objects import BoxObject, CylinderObject
+ from robosuite.models.tasks import ManipulationTask
+ from robosuite.utils.mjcf_utils import CustomMaterial
+ from robosuite.utils.observables import Observable, sensor
+@@ -178,9 +178,17 @@ class Stack(ManipulationEnv):
+         seed=None,
+         cube_A_length=0.02,
+         cube_B_length=0.025,
++        cube_A_half_sizes=None,
++        cube_B_half_sizes=None,
++        object_shape="cube",
+     ):
++        if object_shape not in {"cube", "cuboid", "cylinder"}:
++            raise ValueError("object_shape must be 'cube', 'cuboid', or 'cylinder'")
+         self.cube_A_length = cube_A_length
+         self.cube_B_length = cube_B_length
++        self.cube_A_half_sizes = cube_A_half_sizes
++        self.cube_B_half_sizes = cube_B_half_sizes
++        self.object_shape = object_shape
+         # settings for table top
+         self.table_full_size = table_full_size
+         self.table_friction = table_friction
+@@ -358,17 +366,25 @@ class Stack(ManipulationEnv):
+             tex_attrib=tex_attrib,
+             mat_attrib=mat_attrib,
+         )
+-        self.cubeA = BoxObject(
++        object_class = CylinderObject if self.object_shape == "cylinder" else BoxObject
++        if self.object_shape == "cuboid":
++            size_a = self.cube_A_half_sizes
++            size_b = self.cube_B_half_sizes
++        else:
++            dimensions = 2 if self.object_shape == "cylinder" else 3
++            size_a = [self.cube_A_length] * dimensions
++            size_b = [self.cube_B_length] * dimensions
++        self.cubeA = object_class(
+             name="cubeA",
+-            size_min=[self.cube_A_length, self.cube_A_length, self.cube_A_length],
+-            size_max=[self.cube_A_length, self.cube_A_length, self.cube_A_length],
++            size_min=size_a,
++            size_max=size_a,
+             rgba=[1, 0, 0, 1],
+             material=redwood,
+         )
+-        self.cubeB = BoxObject(
++        self.cubeB = object_class(
+             name="cubeB",
+-            size_min=[self.cube_B_length, self.cube_B_length, self.cube_B_length],
+-            size_max=[self.cube_B_length, self.cube_B_length, self.cube_B_length],
++            size_min=size_b,
++            size_max=size_b,
+             rgba=[0, 1, 0, 1],
+             material=greenwood,
+         )

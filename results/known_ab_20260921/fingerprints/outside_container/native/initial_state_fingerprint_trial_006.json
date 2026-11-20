@@ -1,0 +1,15 @@
+{
+  "trial": 6,
+  "fingerprint": "3ba00cb999b688237b8fda33f4a4f2d62033b5972e2e8fd68e5c90e78df1dfdd",
+  "cube_poses_robot_base": {
+    "primary": [
+      0.51199,
+      -0.299468,
+      -0.08304,
+      -0.891279,
+      -0.0,
+      0.0,
+      0.453455
+    ]
+  }
+}

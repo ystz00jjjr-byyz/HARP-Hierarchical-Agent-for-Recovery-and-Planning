@@ -1,0 +1,204 @@
+metadata:
+  status: formal
+  task_family: multi_object_sort
+  candidate: cuboid_ik_collision_gated_edge_push_v1
+  max_attempts_per_action: 1
+  promotion_gate:
+    unseen_minimum_successes: 8
+    unseen_trials: 10
+  validation:
+    unseen_seeds: 11-20
+    task_completed: 10/10
+    model_requests: 0
+
+initial: [stage_001]
+
+actions:
+  - id: stage_001
+    primitive: multi_object_sort_nominal
+    code: "pass"
+    success_conditions:
+      task_completed: true
+    failure_routes:
+      POSTCONDITION_FAILED: SORT_RECOVERY_REQUIRED
+      SANDBOX_ERROR: SORT_RECOVERY_REQUIRED
+
+  - id: candidate_edge_push_margin_gate
+    primitive: preflight_cuboid_edge_push
+    code: |
+      push_approach, push_contact, push_end, push_retreat, push_quat = (
+          sample_cuboid_edge_push_plan("primary")
+      )
+    preconditions:
+      object_shapes.primary: cuboid
+      object_stable: true
+      workspace_edge_recovery_required: true
+      workspace_edge_recovery_feasible: true
+    success_conditions:
+      ik_collision_margin.safe: true
+    next: candidate_controlled_edge_push
+    metadata:
+      status: formal
+      observation_refresh: true
+      interrupt_on_failure: true
+      max_attempts: 1
+      failure_next_action: recover_budget_safe_stop
+      precondition_failure_next_action: recover_budget_safe_stop
+
+  - id: candidate_controlled_edge_push
+    primitive: execute_single_bounded_edge_push
+    code: |
+      close_gripper()
+      execute_cuboid_edge_push()
+      open_gripper()
+      home_pose()
+    preconditions:
+      ik_collision_margin.safe: true
+    success_conditions:
+      object_inside_regrasp_workspace: true
+      gripper_open: true
+      object_stable: true
+    next: candidate_post_push_reobserve
+    metadata:
+      status: formal
+      interrupt_on_failure: true
+      max_attempts: 1
+      failure_next_action: recover_budget_safe_stop
+      precondition_failure_next_action: recover_budget_safe_stop
+
+  - id: candidate_post_push_reobserve
+    primitive: reobserve_after_edge_push
+    code: |
+      get_object_pose("primary", return_bbox_extent=True)
+      get_object_pose("secondary", return_bbox_extent=True)
+    success_conditions:
+      object_observation_ready: true
+      measurement_fresh: true
+      object_inside_regrasp_workspace: true
+      object_stable: true
+      cuboid_graspability.short_side_graspable: true
+    next: candidate_finish_remaining_sort
+    metadata:
+      status: formal
+      observation_refresh: true
+      interrupt_on_failure: true
+      max_attempts: 1
+      failure_next_action: recover_budget_safe_stop
+      precondition_failure_next_action: recover_budget_safe_stop
+
+  - id: candidate_finish_remaining_sort
+    primitive: finish_unplaced_secondary
+    code: |
+      import numpy as np
+
+      secondary_grasp, secondary_quat, secondary_extent = (
+          sample_cuboid_grasp_plan("secondary", 0)
+      )
+      secondary_clearance = max(0.08, 2.0 * float(secondary_extent[2]))
+      goto_pose(secondary_grasp, secondary_quat, z_approach=secondary_clearance)
+      close_gripper()
+      goto_pose(secondary_grasp + np.array([0.0, 0.0, 0.15]), secondary_quat)
+      secondary_target, _, _ = get_target_region("target_secondary")
+      secondary_depth = float(np.clip(0.20 * secondary_extent[2], 0.004, 0.008))
+      secondary_place = secondary_target + np.array([
+          0.0, 0.0, 0.5 * float(secondary_extent[2]) - secondary_depth
+      ])
+      goto_pose(
+          secondary_place + np.array([0.0, 0.0, secondary_clearance]),
+          secondary_quat,
+      )
+      goto_pose(secondary_place, secondary_quat)
+      open_gripper()
+      goto_pose(
+          secondary_place + np.array([0.0, 0.0, secondary_clearance]),
+          secondary_quat,
+      )
+      home_pose()
+    preconditions:
+      objects_at_targets.primary: true
+      objects_at_targets.secondary: false
+    success_conditions:
+      task_completed: true
+      objects_at_targets.secondary: true
+      gripper_open: true
+      object_stable: true
+    failure_routes:
+      PRECONDITION_FAILED: PRIMARY_REPLACE_REQUIRED
+    metadata:
+      status: formal
+      interrupt_on_failure: true
+      max_attempts: 1
+      failure_next_action: recover_budget_safe_stop
+      precondition_failure_next_action: candidate_post_push_regrasp
+
+  - id: candidate_post_push_regrasp
+    primitive: regrasp_pushed_cuboid
+    code: |
+      import numpy as np
+
+      recovery_grasp, recovery_quat, recovery_extent = (
+          sample_cuboid_grasp_plan("primary", 0)
+      )
+      recovery_clearance = max(0.08, 2.0 * float(recovery_extent[2]))
+      goto_pose(recovery_grasp, recovery_quat, z_approach=recovery_clearance)
+      close_gripper()
+      goto_pose(recovery_grasp + np.array([0.0, 0.0, 0.15]), recovery_quat)
+    preconditions:
+      cuboid_graspability.short_side_graspable: true
+    success_conditions:
+      active_grasp_role: primary
+      target_grasped: true
+      object_lifted: true
+      wrong_object_grasped: false
+    next: candidate_post_push_replace
+    metadata:
+      status: formal
+      interrupt_on_failure: true
+      max_attempts: 1
+      failure_next_action: recover_budget_safe_stop
+      precondition_failure_next_action: recover_budget_safe_stop
+
+  - id: candidate_post_push_replace
+    primitive: replace_pushed_cuboid
+    code: |
+      import numpy as np
+
+      recovery_target, _, _ = get_target_region("target_primary")
+      recovery_depth = float(np.clip(0.20 * recovery_extent[2], 0.004, 0.008))
+      recovery_place = recovery_target + np.array([
+          0.0, 0.0, 0.5 * float(recovery_extent[2]) - recovery_depth
+      ])
+      goto_pose(
+          recovery_place + np.array([0.0, 0.0, recovery_clearance]),
+          recovery_quat,
+      )
+      goto_pose(recovery_place, recovery_quat)
+      open_gripper()
+      goto_pose(
+          recovery_place + np.array([0.0, 0.0, recovery_clearance]),
+          recovery_quat,
+      )
+      home_pose()
+    success_conditions:
+      objects_at_targets.primary: true
+      gripper_open: true
+      object_stable: true
+    next: candidate_finish_remaining_sort
+    metadata:
+      status: formal
+      interrupt_on_failure: true
+      max_attempts: 1
+      failure_next_action: recover_budget_safe_stop
+      precondition_failure_next_action: recover_budget_safe_stop
+
+  - id: recover_budget_safe_stop
+    primitive: recover_budget_safe_stop
+    code: |
+      home_pose()
+      open_gripper()
+    success_conditions:
+      gripper_open: true
+    metadata:
+      status: formal
+      terminal: safe_stop
+      max_attempts: 1

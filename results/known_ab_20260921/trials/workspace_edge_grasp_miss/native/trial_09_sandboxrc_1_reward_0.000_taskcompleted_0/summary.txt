@@ -1,0 +1,34 @@
+----------------------------------------------------------------------------------------------------
+Generated program:
+# Code block 0
+import numpy as np
+
+# Query live object extent and target region geometry
+object_name = "red block"
+obj_pos, obj_quat, obj_extent = get_object_pose(object_name, return_bbox_extent=True)
+target_pos, target_extent, target_yaw = get_target_region()
+
+# Sample grasp pose for the primary object
+grasp_pos, grasp_quat = sample_grasp_pose(object_name)
+
+# Define safe lift height to clear all bin rims
+clearance_z = max(grasp_pos[2] + 0.20, target_pos[2] + target_extent[2] / 2.0 + 0.15)
+lift_pos = grasp_pos.copy()
+lift_pos[2] = clearance_z
+
+# ==============================================================================
+# Stage 1: Grasp and lift the primary object
+# ==============================================================================
+open_gripper()
+goto_pose(grasp_pos, grasp_quat, z_approach=0.1)
+close_gripper()
+goto_pose(lift_pos, grasp_quat)
+
+# Code block 1
+open_gripper()
+grasp_pos, grasp_quat = sample_grasp_pose("primary")
+goto_pose(grasp_pos, grasp_quat, z_approach=0.1)
+close_gripper()
+lift_pos = grasp_pos.copy()
+lift_pos[2] += 0.2
+goto_pose(lift_pos, grasp_quat)

@@ -1,0 +1,45 @@
+# Code block 0
+import numpy as np
+
+# Stage 1: Grasp and lift the primary object
+# Query object pose, extent, and grasp pose
+obj_pos, _, obj_extent = get_object_pose("primary object", return_bbox_extent=True)
+grasp_pos, grasp_quat = sample_grasp_pose("primary object")
+
+# Open gripper prior to approach
+open_gripper()
+
+# Approach and reach grasp pose
+goto_pose(grasp_pos, grasp_quat, z_approach=0.1)
+
+# Securely grasp the object
+close_gripper()
+
+# Lift the object safely
+lift_pos = grasp_pos.copy()
+lift_pos[2] += 0.2
+goto_pose(lift_pos, grasp_quat)
+
+# Code block 1
+import numpy as np
+
+# Stage 1: Grasp and lift the primary object
+open_gripper()
+grasp_pos, grasp_quat = sample_grasp_pose("primary")
+goto_pose(grasp_pos, grasp_quat, z_approach=0.08)
+close_gripper()
+lift_pos = grasp_pos.copy()
+lift_pos[2] += 0.15
+goto_pose(lift_pos, grasp_quat)
+
+# Code block 2
+# Stage 2: Enter the bin, release, and retreat
+target_pos, target_extent, _ = get_target_region("target")
+hover_pos = np.array([target_pos[0], target_pos[1], lift_pos[2]])
+goto_pose(hover_pos, grasp_quat)
+
+place_pos = np.array([target_pos[0], target_pos[1], target_pos[2] + 0.03])
+goto_pose(place_pos, grasp_quat)
+open_gripper()
+
+goto_pose(hover_pos, grasp_quat)

@@ -1,0 +1,62 @@
+metadata:
+  status: formal
+  promoted_at: 2026-09-14
+  candidate_version: role_size_pose_grasp_v7
+  promotion_gate:
+    required_variations: [position, color, size, orientation]
+    minimum_successes_per_variation: 2
+    required_conditions:
+      stable: true
+      target_grasped: true
+      object_lifted: true
+      wrong_object_grasped: false
+      task_completed: true
+    successful_replays: 8
+  placement_recovery_validation:
+    promoted_at: 2026-09-16
+    evidence_root: outputs/cube_restack_place_recovery_10seed_20260916/google_gemini-3.8-flash
+    candidate_v4: {successes: 8, trials: 10}
+    confirmation_v5: {successes: 8, trials: 10}
+    continued_evidence_root: outputs/cube_restack_place_recovery_10seed_20260917/google_gemini-3.8-flash
+    candidate_v6: {successes: 10, trials: 10}
+    confirmation_v7: {successes: 9, trials: 10}
+    semantic_confirmation_v8: {successes: 9, trials: 10}
+    clear_recovery: {successes: 3, attempts: 3, status: formal}
+    directed_evidence_root: outputs/cube_restack_directed_faults_20260917
+    unstable_release: {successes: 8, trials: 10, route_hits: 10, status: formal}
+    place_recovery_failed: {successes: 9, trials: 10, route_hits: 10, status: formal}
+    hybrid_model_fallback:
+      evidence: openrouter_google_gemini-3.8-flash/hybrid_place_fallback_proof/trial_01_sandboxrc_0_reward_1.000_taskcompleted_1
+      initial_plan_source: model
+      policy_recovery_hits: 1
+      policy_model_requests: 0
+      fallback_model_requests: 1
+      task_completed: true
+  validation:
+    evidence_root: outputs/cube_restack_role_size_orientation_20260914/google_gemini-3.8-flash
+    position: [position_v3/trial_11_sandboxrc_0_reward_1.000_taskcompleted_1, position_v3/trial_12_sandboxrc_0_reward_1.000_taskcompleted_1]
+    color: [color_blue_yellow/trial_03_sandboxrc_0_reward_1.000_taskcompleted_1, color_yellow_blue/trial_03_sandboxrc_0_reward_1.000_taskcompleted_1]
+    size: [size_small/trial_03_sandboxrc_0_reward_1.000_taskcompleted_1, size_large_v2/trial_03_sandboxrc_0_reward_1.000_taskcompleted_1]
+    orientation: [orientation_v2_seed23/trial_23_sandboxrc_0_reward_1.000_taskcompleted_1, orientation_v2_seed27/trial_27_sandboxrc_0_reward_1.000_taskcompleted_1]
+recovery_library:
+  GRASP_MISS:
+    - recover_grasp_miss
+    - stage_003_after_recovery
+  GRASP_RECOVERY_FAILED:
+    - recover_grasp_miss_rotated
+    - stage_003_after_recovery
+  CLEAR_PRECONDITION_FAILED:
+    - recover_clear_precondition
+  PLACE_FAILED:
+    - recover_place_failed
+  PLACE_RECOVERY_FAILED:
+    actions:
+      - recover_grasp_miss_rotated
+      - stage_003_after_recovery
+    metadata:
+      status: formal
+      promoted_at: 2026-09-17
+      validation: {successes: 9, trials: 10, route_hits: 10}
+  UNSTABLE_RELEASE:
+    - recover_unstable_release
+    - recover_place_failed

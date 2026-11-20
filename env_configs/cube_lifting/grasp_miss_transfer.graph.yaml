@@ -1,0 +1,26 @@
+metadata:
+  status: validation_passed
+  source_task: cube_restack
+  target_task: cube_lifting
+  exception_id: GRASP_MISS
+  action_library: env_configs/recovery/grasp_miss_actions.yaml
+  validation:
+    evidence_root: outputs/cube_lifting_grasp_miss_transfer_20260916_v2/offline-replay/replay
+    seeds: [1, 2, 3, 4, 5]
+    successful_replays: 5
+    task_completed: true
+initial:
+  - replay_grasp_miss
+actions:
+  - id: replay_grasp_miss
+    primitive: replay_failure_trigger
+    code: |
+      print("Replay the predeclared GRASP_MISS route in cube_lifting")
+    success_conditions:
+      target_grasped: true
+      object_lifted: true
+    failure_routes:
+      POSTCONDITION_FAILED: GRASP_MISS
+    metadata:
+      exception_id: GRASP_MISS
+      validation_only: true

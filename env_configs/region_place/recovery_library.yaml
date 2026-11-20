@@ -1,0 +1,53 @@
+metadata:
+  status: formal
+  task_family: region_place
+  validation:
+    required_successes: 8
+    required_trials: 10
+    current_successes: 10
+    current_trials: 10
+    directed_recovery_successes: 9
+    directed_recovery_trials: 10
+    structural_regrasp_replace_successes: 10
+    structural_regrasp_replace_trials: 10
+    structural_direct_successes: 10
+    infeasible_task_safe_stop_successes: 35
+    infeasible_task_safe_stop_trials: 35
+    feasible_initial_gate_accepts: 20
+    feasible_gate_trials: 20
+    gate_classification_correct: 55
+    gate_classification_trials: 55
+    tight_clearance_holdout_successes: 8
+    tight_clearance_holdout_trials: 10
+    tight_clearance_recovery_successes: 5
+    tight_clearance_recovery_trials: 6
+    model_requests: 0
+    formal_promotion: true
+    infeasible_task_safe_stop_formal: true
+recovery_library:
+  GRASP_MISS:
+    - recover_target_region_regrasp
+  UNSTABLE_RELEASE:
+    - candidate_tight_clearance_regrasp
+  OUTSIDE_TARGET_REGION:
+    actions: [candidate_tight_clearance_regrasp]
+    by_target_geometry:
+      planar_region: [candidate_tight_clearance_regrasp]
+  TIGHT_CLEARANCE_REGRASP_FAILED:
+    - recover_budget_safe_stop
+  TIGHT_CLEARANCE_PLACE_FAILED:
+    - recover_budget_safe_stop
+  WORKSPACE_EDGE_GRASP_MISS:
+    - recover_workspace_edge_reobserve
+  WORKSPACE_EDGE_MOVE_RETRY_REQUIRED:
+    - recover_workspace_edge_move_retry
+  WORKSPACE_EDGE_RECOVERY_FAILED:
+    - recover_budget_safe_stop
+  GRASP_RECOVERY_RETRY_REQUIRED:
+    - recover_target_region_regrasp_retry
+  STRUCTURALLY_DISTINCT_REGRASP_REQUIRED:
+    - candidate_structurally_distinct_regrasp_replace
+  RECOVERY_BUDGET_LOW:
+    - recover_budget_safe_stop
+  INFEASIBLE_TASK:
+    - recover_budget_safe_stop

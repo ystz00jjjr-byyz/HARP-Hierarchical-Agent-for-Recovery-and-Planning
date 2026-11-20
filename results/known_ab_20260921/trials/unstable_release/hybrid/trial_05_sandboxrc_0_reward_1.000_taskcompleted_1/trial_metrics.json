@@ -1,0 +1,26 @@
+{
+  "trial": 5,
+  "elapsed_seconds": 20.008251,
+  "task_completed": true,
+  "reward": 1.0,
+  "sandbox_rc": 0,
+  "model_request_count": 1,
+  "model_response_seconds": 14.867586,
+  "policy_recovery_hits": 1,
+  "policy_recovery_actions": 3,
+  "token_accounted_requests": 1,
+  "token_usage": {
+    "prompt_tokens": 3109,
+    "completion_tokens": 1798,
+    "reasoning_tokens": 1702,
+    "total_tokens": 4907
+  },
+  "num_regenerations": 1,
+  "num_finishes": 0,
+  "num_code_blocks": 7,
+  "code_preflight_rejections": 0,
+  "finish_rejections": 0,
+  "continue_rejections": 0,
+  "execution_guard_aborts": 0,
+  "metrics_complete": true
+}

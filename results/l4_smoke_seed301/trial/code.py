@@ -1,0 +1,32 @@
+# Code block 0
+import numpy as np
+current_pos, current_quat, primary_extent = get_object_pose("primary", return_bbox_extent=True)
+if abs(float(current_pos[1])) >= 0.27:
+    w, x, y, z = current_quat / np.linalg.norm(current_quat)
+    yaw = np.arctan2(2.0 * (w * z + x * y), 1.0 - 2.0 * (y * y + z * z))
+    yaw += 0.5 * np.pi
+    grasp_depth = np.clip(0.20 * float(primary_extent[2]), 0.004, 0.008)
+    grasp_pos = current_pos - np.array([0.0, 0.0, grasp_depth])
+    grasp_pos[1] -= np.copysign(0.01, current_pos[1])
+    grasp_quat = np.array([0.0, -np.sin(0.5 * yaw), np.cos(0.5 * yaw), 0.0])
+else:
+    grasp_pos, grasp_quat = sample_grasp_pose("primary")
+approach = max(0.1, 2.0 * float(primary_extent[2]))
+lift = max(0.18, 3.0 * float(primary_extent[2]))
+open_gripper()
+goto_pose(grasp_pos, grasp_quat, z_approach=approach)
+close_gripper()
+lift_pos = grasp_pos + np.array([0.0, 0.0, lift])
+goto_pose(lift_pos, grasp_quat)
+
+# Code block 1
+target_object_center, target_extent, rim_z = get_target_region("target")
+target_gripper = target_object_center + (grasp_pos - current_pos)
+entry = target_gripper.copy()
+entry[2] = max(rim_z + 0.12, target_gripper[2] + 0.12)
+transit = 0.5 * (lift_pos + entry)
+transit[2] = max(float(lift_pos[2]), float(entry[2]))
+goto_pose(transit, grasp_quat)
+goto_pose(entry, grasp_quat)
+goto_pose(target_gripper, grasp_quat)
+open_gripper()

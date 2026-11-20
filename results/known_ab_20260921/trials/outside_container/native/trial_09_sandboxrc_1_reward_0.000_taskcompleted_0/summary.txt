@@ -1,0 +1,66 @@
+----------------------------------------------------------------------------------------------------
+Generated program:
+# Code block 0
+import numpy as np
+
+# Query live object extent and target region
+candidates = ["primary object", "black bar", "black stick", "bar", "stick", "object"]
+obj_pos, obj_extent, chosen_name = None, None, None
+for name in candidates:
+    try:
+        pos, _, extent = get_object_pose(name, return_bbox_extent=True)
+        if pos is not None:
+            obj_pos = pos
+            obj_extent = extent
+            chosen_name = name
+            break
+    except Exception:
+        continue
+
+if chosen_name is None:
+    chosen_name = "primary object"
+    obj_pos, _, obj_extent = get_object_pose(chosen_name, return_bbox_extent=True)
+
+target_info = get_target_region("target")
+target_pos = target_info[0]
+
+# Sample grasp pose
+grasp_pos, grasp_quat = sample_grasp_pose(chosen_name)
+
+# ==================== STAGE 1: Grasp and lift ====================
+open_gripper()
+goto_pose(grasp_pos, grasp_quat, z_approach=0.08)
+close_gripper()
+
+lift_pos = np.copy(grasp_pos)
+lift_pos[2] += 0.20
+goto_pose(lift_pos, grasp_quat)
+
+# Code block 1
+import numpy as np
+
+# Query live object extent and target region
+try:
+    pos, quat, extent = get_object_pose("primary", return_bbox_extent=True)
+except Exception:
+    pos, quat, extent = get_object_pose("primary object", return_bbox_extent=True)
+
+try:
+    target_center, target_extent, target_yaw = get_target_region("target")
+except Exception:
+    pass
+
+# Sample grasp pose for the primary object
+try:
+    grasp_pos, grasp_quat = sample_grasp_pose("primary")
+except Exception:
+    grasp_pos, grasp_quat = sample_grasp_pose("primary object")
+
+# Execute grasp and lift
+open_gripper()
+goto_pose(grasp_pos, grasp_quat, z_approach=0.08)
+close_gripper()
+
+lift_pos = np.array(grasp_pos, dtype=float).copy()
+lift_pos[2] += 0.15
+goto_pose(lift_pos, grasp_quat)

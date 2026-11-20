@@ -1,0 +1,47 @@
+metadata:
+  status: frozen_experiment
+  task_family: region_place
+  purpose: same_checkpoint_structural_unknown_recovery
+initial: [checkpoint_failure_marker]
+actions:
+  - id: checkpoint_failure_marker
+    primitive: inherit_failed_single_policy_postcondition
+    code: |
+      RESULT = "inherited_single_policy_postcondition_failure"
+    success_conditions:
+      task_completed: true
+    failure_routes:
+      POSTCONDITION_FAILED: STRUCTURAL_UNKNOWN_FAILURE
+    metadata:
+      status: frozen_experiment
+      interrupt_on_failure: true
+      failure_next_action: recover_budget_safe_stop
+
+  - id: candidate_grasp_primary
+    primitive: monitor_structured_regrasp
+    code: |
+      RESULT = "monitor_only"
+    success_conditions:
+      target_grasped: true
+      object_lifted: true
+      wrong_object_grasped: false
+
+  - id: candidate_replace_primary
+    primitive: monitor_structured_replace
+    code: |
+      RESULT = "monitor_only"
+    success_conditions:
+      object_inside_target_region: true
+      task_completed: true
+      gripper_open: true
+      object_stable: true
+
+  - id: recover_budget_safe_stop
+    primitive: safe_stop
+    code: |
+      open_gripper()
+      home_pose()
+    metadata:
+      terminal: safe_stop
+      interrupt_on_failure: true
+

@@ -1,0 +1,20 @@
+metadata:
+  status: formal
+  task_family: multi_object_sort
+  candidate: cuboid_ik_collision_gated_edge_push_v1
+  validation:
+    unseen_seeds: 11-20
+    task_completed: 10/10
+    model_requests: 0
+
+recovery_library:
+  GRASP_MISS:
+    - candidate_edge_push_margin_gate
+  PLACE_FAILED:
+    - candidate_edge_push_margin_gate
+  SORT_RECOVERY_REQUIRED:
+    - candidate_edge_push_margin_gate
+  PRIMARY_REPLACE_REQUIRED:
+    - candidate_post_push_regrasp
+  RECOVERY_BUDGET_LOW:
+    - recover_budget_safe_stop

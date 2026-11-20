@@ -1,0 +1,14 @@
+metadata:
+  status: candidate
+  task_family: multi_object_sort
+  candidate: cuboid_short_side_orthogonal_grasp_v1
+
+recovery_library:
+  GRASP_MISS:
+    - candidate_cuboid_short_side_gate
+  PLACE_FAILED:
+    - candidate_cuboid_short_side_gate
+  SORT_RECOVERY_REQUIRED:
+    - candidate_cuboid_short_side_gate
+  RECOVERY_BUDGET_LOW:
+    - recover_budget_safe_stop

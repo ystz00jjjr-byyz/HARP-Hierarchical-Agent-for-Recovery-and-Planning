@@ -1,0 +1,33 @@
+----------------------------------------------------------------------------------------------------
+Generated program:
+# Code block 0
+
+
+# Code block 1
+# Stage 1: Grasp and lift the primary object
+open_gripper()
+grasp_pos, grasp_quat = sample_grasp_pose("red cube")
+goto_pose(grasp_pos, grasp_quat, z_approach=0.08)
+close_gripper()
+
+lift_pos = grasp_pos.copy()
+lift_pos[2] += 0.15
+goto_pose(lift_pos, grasp_quat)
+
+# Code block 2
+# Stage 2: Enter bin, release, and retreat
+target_center, _, _ = get_target_region("target")
+
+hover_pos = target_center.copy()
+hover_pos[2] = 0.10
+goto_pose(hover_pos, grasp_quat)
+
+place_pos = target_center.copy()
+place_pos[2] = -0.06
+goto_pose(place_pos, grasp_quat)
+
+open_gripper()
+
+retreat_pos = target_center.copy()
+retreat_pos[2] = 0.10
+goto_pose(retreat_pos, grasp_quat)

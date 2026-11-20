@@ -1,0 +1,65 @@
+# Fixed-seed group A: original multi-turn CaP-X without agent-visible text state.
+env:
+  _target_: capx.envs.tasks.franka.franka_pick_place.FrankaPickPlaceCodeEnv
+  cfg:
+    _target_: capx.envs.tasks.base.CodeExecEnvConfig
+    low_level: franka_robosuite_cubes_low_level
+    privileged: false
+    apis:
+      - FrankaControlApi
+    prompt: |
+      You are controlling a Franka Emika robot with API described below.
+      Goal: place the red cube on top of the green cube and then open the gripper.
+      Write only executable Python code. After execution you may receive feedback
+      and choose whether to regenerate code or finish.
+      The functions below are already imported. Import numpy explicitly if needed.
+    multi_turn_prompt: |
+      The following code blocks were just executed:
+      ```python
+      {executed_code}
+      ```
+      Console stdout:
+      ```
+      {console_stdout}
+      ```
+      Console stderr:
+      ```
+      {console_stderr}
+      ```
+      Use all available state evidence to decide whether the task is complete or
+      whether a safe corrective action is required.
+      Respond with exactly one:
+      - REGENERATE followed by new Python code in a fenced code block.
+      - FINISH if the task is complete.
+
+api_servers:
+  - _target_: capx.serving.launch_sam3_server.main
+    device: cuda
+    port: 8114
+    host: 127.0.0.1
+    checkpoint_path: ${oc.env:SAM3_CHECKPOINT,./checkpoints/sam3.pt}
+  - _target_: capx.serving.launch_contact_graspnet_server.main
+    port: 8115
+    host: 127.0.0.1
+  - _target_: capx.serving.launch_pyroki_server.main
+    port: 8116
+    host: 127.0.0.1
+    robot: panda_description
+    target_link: panda_hand
+
+record_video: false
+use_legacy_multi_turn_decision_prompt: false
+save_multiturn_prompts: true
+world_state_recorder:
+  enabled: true
+  record_every_n_sim_steps: 10
+  record_rgb: false
+  record_depth: false
+  compress_arrays: true
+trials: 5
+num_workers: 1
+
+output_dir: ./outputs/text_world_state_seeded/baseline
+text_world_state_feedback:
+  enabled: false
+

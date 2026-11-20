@@ -1,0 +1,85 @@
+# Code block 0
+import numpy as np
+
+# Stage 1: Grasp and lift the primary object
+obj_pos, _, obj_extent = get_object_pose("red block", return_bbox_extent=True)
+target_pos, _, _ = get_target_region("target")
+grasp_pos, grasp_quat = sample_grasp_pose("red block")
+
+open_gripper()
+goto_pose(grasp_pos, grasp_quat, z_approach=0.1)
+close_gripper()
+goto_pose(grasp_pos + np.array([0.0, 0.0, 0.2]), grasp_quat)
+
+# Code block 1
+import numpy as np
+
+# Stage 1: Grasp and lift the primary object
+try:
+    obj_pos, obj_quat, obj_extent = get_object_pose('red block', return_bbox_extent=True)
+except Exception:
+    obj_pos, obj_quat, obj_extent = get_object_pose('red cube', return_bbox_extent=True)
+
+try:
+    grasp_pos, grasp_quat = sample_grasp_pose('red block')
+except Exception:
+    grasp_pos, grasp_quat = sample_grasp_pose('red cube')
+
+open_gripper()
+goto_pose(grasp_pos, grasp_quat, z_approach=0.08)
+close_gripper()
+
+lift_pos = grasp_pos.copy()
+lift_pos[2] += 0.18
+goto_pose(lift_pos, grasp_quat)
+
+# Code block 2
+import numpy as np
+
+target_pos, _, _ = get_target_region('target')
+quat = np.array([0.0, 0.0, 1.0, 0.0])
+
+hover_pos = np.array([target_pos[0], target_pos[1], 0.15])
+place_pos = np.array([target_pos[0], target_pos[1], target_pos[2] + 0.035])
+
+goto_pose(hover_pos, quat)
+goto_pose(place_pos, quat)
+open_gripper()
+goto_pose(hover_pos, quat)
+
+# Code block 3
+import numpy as np
+
+# Stage 1: Grasp and lift the primary object
+obj_pos, _, obj_extent = get_object_pose('primary', return_bbox_extent=True)
+target_pos, target_extent, _ = get_target_region('target')
+
+open_gripper()
+grasp_pos, grasp_quat = sample_grasp_pose('primary')
+goto_pose(grasp_pos, grasp_quat, z_approach=0.08)
+close_gripper()
+
+lift_pos = grasp_pos.copy()
+lift_pos[2] += 0.15
+goto_pose(lift_pos, grasp_quat)
+
+# Code block 4
+import numpy as np
+
+# Target region geometry
+target_center, target_extent, _ = get_target_region()
+quat_down = np.array([0.0, 0.0, 1.0, 0.0])
+
+# Move safely above the target bin
+above_bin_pos = np.array([target_center[0], target_center[1], 0.10])
+goto_pose(above_bin_pos, quat_down)
+
+# Enter the bin
+place_pos = np.array([target_center[0], target_center[1], target_center[2] + 0.04])
+goto_pose(place_pos, quat_down)
+
+# Release the object gently
+open_gripper()
+
+# Retreat safely
+goto_pose(above_bin_pos, quat_down)

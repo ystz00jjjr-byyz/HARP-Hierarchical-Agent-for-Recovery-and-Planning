@@ -1,0 +1,181 @@
+----------------------------------------------------------------------------------------------------
+Generated program:
+# Code block 0
+import numpy as np
+
+# Stage 1: Grasp and lift the primary object
+# Query the live object extent and target region
+obj_pos, obj_quat, obj_extent = get_object_pose("red block", return_bbox_extent=True)
+target_pos, target_extent, target_yaw = get_target_region()
+
+# Sample grasp pose for the red block
+grasp_pos, grasp_quat = sample_grasp_pose("red block")
+
+# Prepare gripper and approach grasp pose
+open_gripper()
+goto_pose(grasp_pos, grasp_quat, z_approach=0.08)
+close_gripper()
+
+# Lift the object safely above tray and bin walls
+lift_pos = np.array([grasp_pos[0], grasp_pos[1], grasp_pos[2] + 0.20])
+goto_pose(lift_pos, grasp_quat)
+
+# Code block 1
+import numpy as np
+
+# Query live object extent and target region
+target_center, target_extent, _ = get_target_region('target')
+
+obj_name = 'red block'
+obj_extent = np.array([0.04, 0.04, 0.04])
+for name in ['red block', 'primary', 'red cube']:
+    try:
+        obj_pos, _, extent = get_object_pose(name, return_bbox_extent=True)
+        if obj_pos is not None:
+            obj_name = name
+            if extent is not None:
+                obj_extent = extent
+            break
+    except Exception:
+        continue
+
+grasp_pos, grasp_quat = sample_grasp_pose(obj_name)
+
+# Stage 1: Grasp and lift the primary object
+open_gripper()
+goto_pose(grasp_pos, grasp_quat, z_approach=0.08)
+close_gripper()
+
+lift_pos = np.copy(grasp_pos)
+lift_pos[2] = 0.15
+goto_pose(lift_pos, grasp_quat)
+
+# Code block 2
+import numpy as np
+
+# Stage 1: Grasp and lift the primary object
+try:
+    obj_pos, _, obj_extent = get_object_pose("primary", return_bbox_extent=True)
+except Exception:
+    obj_pos, _, obj_extent = get_object_pose("cube", return_bbox_extent=True)
+
+if obj_extent is None:
+    obj_extent = np.array([0.04, 0.04, 0.04])
+
+try:
+    grasp_pos, grasp_quat = sample_grasp_pose("primary")
+except Exception:
+    grasp_pos, grasp_quat = sample_grasp_pose("cube")
+
+open_gripper()
+goto_pose(grasp_pos, grasp_quat, z_approach=0.05)
+close_gripper()
+
+lift_pos = grasp_pos.copy()
+lift_pos[2] += 0.15
+goto_pose(lift_pos, grasp_quat)
+
+# Code block 3
+import numpy as np
+
+# Stage 1: grasp and lift the primary object
+_, _, obj_extent = get_object_pose("primary", return_bbox_extent=True)
+open_gripper()
+grasp_pos, grasp_quat = sample_grasp_pose("primary")
+goto_pose(grasp_pos, grasp_quat, z_approach=0.1)
+close_gripper()
+
+lift_pos = grasp_pos.copy()
+lift_pos[2] += 0.15
+goto_pose(lift_pos, grasp_quat)
+
+# Code block 4
+import numpy as np
+
+# Query live object extent and target region
+try:
+    obj_pos, _, obj_extent = get_object_pose("primary", return_bbox_extent=True)
+except Exception:
+    obj_pos, _, obj_extent = get_object_pose("primary object", return_bbox_extent=True)
+
+try:
+    grasp_pos, grasp_quat = sample_grasp_pose("primary")
+except Exception:
+    grasp_pos, grasp_quat = sample_grasp_pose("primary object")
+
+target_info = get_target_region("target")
+target_pos = target_info[0]
+
+# Stage 1: grasp and lift the primary object
+open_gripper()
+goto_pose(grasp_pos, grasp_quat, z_approach=0.08)
+close_gripper()
+
+lift_pos = grasp_pos.copy()
+lift_pos[2] += 0.2
+goto_pose(lift_pos, grasp_quat)
+
+# Code block 5
+import numpy as np
+
+# Stage 1: Grasp and lift the primary object
+home_pose()
+open_gripper()
+
+grasp_pos, grasp_quat = sample_grasp_pose("primary")
+
+# Approach via explicit pre-grasp pose
+pre_grasp_pos = grasp_pos.copy()
+pre_grasp_pos[2] += 0.10
+goto_pose(pre_grasp_pos, grasp_quat)
+
+# Descend to object and grasp
+goto_pose(grasp_pos, grasp_quat)
+close_gripper()
+
+# Lift primary object clear of any boundaries
+lift_pos = grasp_pos.copy()
+lift_pos[2] += 0.18
+goto_pose(lift_pos, grasp_quat)
+
+# Code block 6
+# Stage 2: Enter the bin, release gently, and retreat
+target_center, _, _ = get_target_region("target")
+
+# Transit above target container
+transit_pos = np.array([target_center[0], target_center[1], 0.12])
+goto_pose(transit_pos, grasp_quat)
+
+# Lower into bin gently
+place_pos = np.array([target_center[0], target_center[1], target_center[2] + 0.04])
+goto_pose(place_pos, grasp_quat)
+
+# Release object
+open_gripper()
+
+# Retreat upward safely
+retreat_pos = np.array([target_center[0], target_center[1], 0.15])
+goto_pose(retreat_pos, grasp_quat)
+home_pose()
+
+
+Environment response:
+  Sandbox failed: 0
+  Stdout: 
+  Stderr: Traceback (most recent call last):
+  File "/home/byyz/桌面/cap-x-main/capx/envs/tasks/base.py", line 179, in _exec_user_code
+    exec(code, self._exec_globals, self._exec_globals)
+  File "<string>", line 5, in <module>
+  File "/home/byyz/桌面/cap-x-main/capx/integrations/franka/control_privileged.py", line 128, in get_object_pose
+    raise ValueError(f"Invalid object name: {object_name}")
+ValueError: Invalid object name: red block
+
+
+Static execution gate rejected code: expensive robot/perception API appears in an unbounded loop
+  Reward: 0.0
+  Task Completed: False
+  Terminated: False, Truncated: True
+  Num Regenerations: 5
+  Num Finishes: 0
+  Num Code Blocks: 7
+----------------------------------------------------------------------------------------------------

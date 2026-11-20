@@ -1,0 +1,16 @@
+metadata:
+  status: formal
+  promoted_at: 2026-10-07
+  task_family: multi_object_sort
+  policy: three_role_sequential_finish_v2
+  validation: {seeds: 41-50, task_completed: 8/10}
+
+recovery_library:
+  THREE_OBJECT_SORT_INCOMPLETE:
+    - candidate_grasp_primary
+  GRASP_MISS:
+    - candidate_grasp_primary
+  PLACE_FAILED:
+    - candidate_grasp_primary
+  RECOVERY_BUDGET_LOW:
+    - recover_budget_safe_stop

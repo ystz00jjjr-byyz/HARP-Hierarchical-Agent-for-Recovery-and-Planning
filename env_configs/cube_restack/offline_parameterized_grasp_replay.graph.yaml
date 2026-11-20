@@ -1,0 +1,146 @@
+metadata:
+  status: validation_passed
+  validated_at: 2026-09-14
+  exception_id: GRASP_MISS
+  promotion_gate:
+    required_variations: [position, color, size, orientation]
+    minimum_successes_per_variation: 2
+    required_action: recover_grasp_miss
+    required_postcondition_pass_rate: 1.0
+  completion_gate:
+    minimum_distinct_successful_seeds: 3
+    required_route: [replay_grasp_miss, recover_grasp_miss, stage_003]
+    required_task_completed: true
+  validation:
+    evidence_root: outputs/cube_restack_role_size_orientation_20260914/google_gemini-3.8-flash
+    position: [position_v3/trial_11_sandboxrc_0_reward_1.000_taskcompleted_1, position_v3/trial_12_sandboxrc_0_reward_1.000_taskcompleted_1]
+    color: [color_blue_yellow/trial_03_sandboxrc_0_reward_1.000_taskcompleted_1, color_yellow_blue/trial_03_sandboxrc_0_reward_1.000_taskcompleted_1]
+    size: [size_small/trial_03_sandboxrc_0_reward_1.000_taskcompleted_1, size_large_v2/trial_03_sandboxrc_0_reward_1.000_taskcompleted_1]
+    orientation: [orientation_v2_seed23/trial_23_sandboxrc_0_reward_1.000_taskcompleted_1, orientation_v2_seed27/trial_27_sandboxrc_0_reward_1.000_taskcompleted_1]
+    successful_replays: 8
+    task_completed: true
+initial:
+  - clear_secondary
+actions:
+  - id: clear_secondary
+    primitive: clear_restack_precondition
+    code: |
+      import numpy as np
+
+      secondary_pos, _, secondary_extent = get_object_pose("secondary", return_bbox_extent=True)
+      primary_pos, _, primary_extent = get_object_pose("primary", return_bbox_extent=True)
+      secondary_grasp_pos, secondary_grasp_quat = sample_grasp_pose("secondary")
+      open_gripper()
+      approach_height = max(0.05, 1.5 * float(secondary_extent[2]))
+      goto_pose(secondary_grasp_pos, secondary_grasp_quat, z_approach=approach_height)
+      close_gripper()
+      clearance = max(0.15, 0.5 * float(secondary_extent[1] + primary_extent[1]) + 0.10)
+      sideways_y = clearance if secondary_pos[1] < 0.10 else -clearance
+      secondary_center_z = primary_pos[2] + 0.5 * float(secondary_extent[2] - primary_extent[2])
+      grasp_offset = secondary_grasp_pos - secondary_pos
+      table_place_pos = np.array([secondary_pos[0], secondary_pos[1] + sideways_y, secondary_center_z]) + grasp_offset
+      goto_pose(table_place_pos + np.array([0.0, 0.0, approach_height]), secondary_grasp_quat)
+      goto_pose(table_place_pos, secondary_grasp_quat)
+      open_gripper()
+      goto_pose(table_place_pos + np.array([0.0, 0.0, max(0.10, 2.0 * float(secondary_extent[2]))]), secondary_grasp_quat)
+    success_conditions:
+      restack_precondition_cleared: true
+      gripper_open: true
+      object_stable: true
+    failure_routes:
+      POSTCONDITION_FAILED: CLEAR_PRECONDITION_FAILED
+    next: replay_grasp_miss
+    metadata:
+      status: replay_fixture
+      sideways_clearance_rule: max(0.15, 0.5 * (secondary_width + primary_width) + 0.10)
+
+  - id: replay_grasp_miss
+    primitive: replay_failure_trigger
+    code: |
+      print("Replay the predeclared GRASP_MISS route")
+    preconditions:
+      restack_precondition_cleared: true
+      object_stable: true
+    success_conditions:
+      target_grasped: true
+      object_lifted: true
+    failure_routes:
+      POSTCONDITION_FAILED: GRASP_MISS
+
+  - id: recover_grasp_miss
+    primitive: grasp_from_current_primary_pose
+    parameters:
+      primary_pose: cube_poses_robot_base.primary
+      primary_extent: cube_extents_robot_base.primary
+    code: |
+      import numpy as np
+
+      primary_pose = np.asarray(_offline_params["primary_pose"], dtype=float)
+      primary_extent = np.asarray(_offline_params["primary_extent"], dtype=float)
+      w, x, y, z = primary_pose[3:7] / np.linalg.norm(primary_pose[3:7])
+      yaw = np.arctan2(2.0 * (w * z + x * y), 1.0 - 2.0 * (y * y + z * z))
+      primary_grasp_quat = np.array([0.0, -np.sin(0.5 * yaw), np.cos(0.5 * yaw), 0.0])
+      grasp_z_offset = max(0.004, 0.175 * float(primary_extent[2]))
+      primary_grasp_pos = primary_pose[:3] + np.array([0.0, 0.0, grasp_z_offset])
+      approach_height = max(0.08, 2.0 * float(primary_extent[2]))
+      lift_height = max(0.15, 3.0 * float(primary_extent[2]))
+      primary_lift_pos = primary_grasp_pos + np.array([0.0, 0.0, lift_height])
+      primary_pos = primary_pose[:3]
+      home_pose()
+      open_gripper()
+      goto_pose(primary_grasp_pos, primary_grasp_quat, z_approach=approach_height)
+      close_gripper()
+      goto_pose(primary_lift_pos, primary_grasp_quat)
+    preconditions:
+      restack_precondition_cleared: true
+      object_stable: true
+    success_conditions:
+      target_grasped: true
+      object_lifted: true
+      wrong_object_grasped: false
+    failure_routes:
+      POSTCONDITION_FAILED: GRASP_RECOVERY_FAILED
+    next: stage_003
+    metadata:
+      status: formal
+      grasp_pose_source: current_primary_pose_and_extent
+      orientation_rule: top_down_rotated_by_primary_yaw
+      approach_height_rule: max(0.08, 2 * primary_height)
+      lift_height_rule: max(0.15, 3 * primary_height)
+      candidate_version: role_size_pose_grasp_v7
+
+  - id: stage_003
+    primitive: place_target
+    parameters:
+      secondary_pose: cube_poses_robot_base.secondary
+      lifted_primary_pose: cube_poses_robot_base.primary
+      primary_extent: cube_extents_robot_base.primary
+      secondary_extent: cube_extents_robot_base.secondary
+    code: |
+      secondary_pose = np.asarray(_offline_params["secondary_pose"], dtype=float)
+      lifted_primary_pose = np.asarray(_offline_params["lifted_primary_pose"], dtype=float)
+      primary_extent = np.asarray(_offline_params["primary_extent"], dtype=float)
+      secondary_extent = np.asarray(_offline_params["secondary_extent"], dtype=float)
+      center_spacing = 0.5 * float(primary_extent[2] + secondary_extent[2])
+      target_primary_center = secondary_pose[:3] + np.array([0.0, 0.0, center_spacing])
+      held_offset = primary_lift_pos - lifted_primary_pose[:3]
+      target_gripper_pos = target_primary_center + held_offset
+      place_approach = max(0.05, 1.5 * float(primary_extent[2]))
+      goto_pose(target_gripper_pos + np.array([0.0, 0.0, place_approach]), primary_grasp_quat)
+      goto_pose(target_gripper_pos, primary_grasp_quat)
+      open_gripper()
+      goto_pose(target_gripper_pos + np.array([0.0, 0.0, max(0.10, 2.0 * float(primary_extent[2]))]), primary_grasp_quat)
+    preconditions:
+      target_grasped: true
+      object_lifted: true
+      wrong_object_grasped: false
+    success_conditions:
+      task_completed: true
+      gripper_open: true
+      object_stable: true
+    failure_routes:
+      POSTCONDITION_FAILED: PLACE_FAILED
+    metadata:
+      status: formal
+      candidate_version: role_size_place_v2
+      center_spacing_rule: 0.5 * (primary_height + secondary_height)

@@ -1,0 +1,58 @@
+env:
+  _target_: capx.envs.tasks.franka.franka_region_place.FrankaRegionPlaceCodeEnv
+  cfg:
+    _target_: capx.envs.tasks.base.CodeExecEnvConfig
+    low_level: franka_robosuite_bin_place_low_level
+    low_level_kwargs:
+      cube_half_sizes: 0.02,0.02,0.02
+      max_steps: 2200
+      scenario_sweep: true
+      target_mode: region
+      inject_primary_release_failures: 1
+    privileged: true
+    enable_render: true
+    apis: [FrankaControlPrivilegedApi]
+
+api_servers:
+  - _target_: capx.serving.launch_pyroki_server.main
+    port: 8116
+    host: 127.0.0.1
+    robot: panda_description
+    target_link: panda_hand
+
+record_video: true
+trials: 110
+num_workers: 1
+max_trial_retries: 1
+trial_timeout_seconds: 1000
+output_dir: ${oc.env:REGION_PLACE_OUTPUT_DIR}
+
+world_state_recorder:
+  enabled: true
+  record_every_n_sim_steps: 10
+  record_rgb: false
+  record_depth: false
+  compress_arrays: true
+
+offline_recovery:
+  enabled: true
+  task_graph: env_configs/region_place/offline_task_graph.yaml
+  recovery_library: env_configs/region_place/candidate_structural_recovery_library.yaml
+  k_action: 3
+  k_state: 3
+  min_stable_fraction: 0.6667
+  state_sampling:
+    enabled: true
+    window_size: 3
+    action_aligned_window: true
+    wait_for_stability: true
+    stability_wait_steps: 20
+    sample_sim_steps: 3
+    fail_open: false
+
+metadata:
+  status: candidate_validation
+  task_family: region_place
+  candidate: STRUCTURALLY_DISTINCT_REGRASP_REPLACE
+  seeds: [101, 102, 103, 104, 105, 106, 107, 108, 109, 110]
+  promotion_threshold: 8/10

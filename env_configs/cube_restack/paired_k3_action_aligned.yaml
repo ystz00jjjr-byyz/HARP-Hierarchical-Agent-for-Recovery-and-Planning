@@ -1,0 +1,81 @@
+env:
+  _target_: capx.envs.tasks.franka.franka_cube_restack.FrankaRestackCodeEnv
+  cfg:
+    _target_: capx.envs.tasks.base.CodeExecEnvConfig
+    low_level: franka_robosuite_cubes_restack_low_level
+    privileged: false
+    apis:
+      - FrankaControlApi
+    prompt: |
+      You are controlling a Franka Emika robot. Initially the green cube is on
+      top of the red cube. Goal: gently place the red cube on top of the green
+      cube and open the gripper. Build exactly three executable stages separated
+      by the literal line breakpoint_code_block(). Stage 1: grasp the green cube,
+      move it to a stable clear location at least 0.10 m sideways, release, and
+      retreat. Stage 2: acquire and lift the red cube. Stage 3: calculate the
+      target using cube extents, place red on green, release, retreat, and return
+      home. Variables persist across stages. Nothing may be dropped from height.
+      After each stage you receive an action-aligned K=3 state window.
+    multi_turn_prompt: |
+      The following code blocks were just executed:
+      ```python
+      {executed_code}
+      ```
+      Console stdout:
+      ```
+      {console_stdout}
+      ```
+      Console stderr:
+      ```
+      {console_stderr}
+      ```
+      Use restack_precondition_cleared, task progress, and the recovery directive.
+      FINISH only when task_completed is true. If strategy_switch is required,
+      change the robot-action sequence rather than only numeric offsets.
+      Respond with exactly one:
+      - CONTINUE if the current stage passed and the next stage is safe.
+      - REGENERATE followed by new Python code in a fenced code block.
+      - FINISH if task_completed is true.
+
+api_servers:
+  - _target_: capx.serving.launch_sam3_server.main
+    device: cuda
+    port: 8114
+    host: 127.0.0.1
+    checkpoint_path: ${oc.env:SAM3_CHECKPOINT,./checkpoints/sam3.pt}
+  - _target_: capx.serving.launch_contact_graspnet_server.main
+    port: 8115
+    host: 127.0.0.1
+  - _target_: capx.serving.launch_pyroki_server.main
+    port: 8116
+    host: 127.0.0.1
+    robot: panda_description
+    target_link: panda_hand
+
+record_video: false
+use_legacy_multi_turn_decision_prompt: false
+save_multiturn_prompts: true
+world_state_recorder:
+  enabled: true
+  record_every_n_sim_steps: 10
+  record_rgb: false
+  record_depth: false
+  compress_arrays: true
+trials: 5
+num_workers: 1
+output_dir: ./outputs/paired_capx_k3_two_tasks/complex_cube_restack/k3_action_aligned
+text_world_state_feedback:
+  enabled: true
+  window_size: 3
+  min_stable_fraction: 0.6667
+  numeric_abs_tolerance: 0.01
+  numeric_rel_tolerance: 0.05
+  include_entities: true
+  fail_open: false
+  loop_guard_enabled: true
+  max_same_failure_retries: 2
+  min_progress_delta: 0.01
+  action_aligned_window: true
+  wait_for_stability: true
+  stability_wait_steps: 20
+  sample_sim_steps: 3

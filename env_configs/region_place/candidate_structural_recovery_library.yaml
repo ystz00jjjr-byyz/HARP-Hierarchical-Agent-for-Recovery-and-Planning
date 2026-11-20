@@ -1,0 +1,11 @@
+metadata:
+  status: promoted_formal
+  task_family: region_place
+  candidate: STRUCTURALLY_DISTINCT_REGRASP_REPLACE
+  promotion_threshold: 8/10
+  validation_result: 10/10
+recovery_library:
+  OUTSIDE_TARGET_REGION:
+    - candidate_structurally_distinct_regrasp_replace
+  RECOVERY_BUDGET_LOW:
+    - recover_budget_safe_stop

@@ -1,0 +1,14 @@
+{
+  "model": "gpt-6-astra",
+  "billing": "chatgpt_subscription",
+  "image_count": 0,
+  "usage": {
+    "input_tokens": 10795,
+    "cached_input_tokens": 0,
+    "cache_write_input_tokens": 0,
+    "output_tokens": 187,
+    "reasoning_output_tokens": 56
+  },
+  "model_response_seconds": 17.89649467700019,
+  "response": "{\"schema\":\"recovery_graph_v1\",\"status\":\"blocked\",\"reason\":\"The failed checkpoint was not supplied. Object identity, target identity, and robot state are required to construct a grounded recovery graph.\",\"required_input\":\"failed_checkpoint\",\"ordered_skills\":[{\"skill\":\"safe_home\",\"optional\":true},{\"skill\":\"reobserve_object\"},{\"skill\":\"sample_grasp\"},{\"skill\":\"regrasp\"},{\"skill\":\"reobserve_target\"},{\"skill\":\"replace\"},{\"skill\":\"verify\"}],\"nodes\":[],\"edges\":[]}"
+}

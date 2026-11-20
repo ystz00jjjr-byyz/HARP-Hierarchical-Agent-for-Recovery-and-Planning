@@ -1,0 +1,63 @@
+env:
+  _target_: capx.envs.tasks.franka.franka_cube_restack.FrankaRestackCodeEnv
+  cfg:
+    _target_: capx.envs.tasks.base.CodeExecEnvConfig
+    low_level: franka_robosuite_cubes_restack_low_level
+    low_level_kwargs:
+      cube_A_length: 0.02
+      cube_B_length: 0.02
+      primary_color: red
+      secondary_color: green
+      object_shape: cylinder
+    privileged: false
+    apis: [FrankaControlApi]
+
+api_servers:
+  - _target_: capx.serving.launch_sam3_server.main
+    device: cuda
+    port: 8114
+    host: 127.0.0.1
+    checkpoint_path: ${oc.env:SAM3_CHECKPOINT,./checkpoints/sam3.pt}
+  - _target_: capx.serving.launch_contact_graspnet_server.main
+    port: 8115
+    host: 127.0.0.1
+  - _target_: capx.serving.launch_pyroki_server.main
+    port: 8116
+    host: 127.0.0.1
+    robot: panda_description
+    target_link: panda_hand
+
+record_video: false
+trials: 1
+num_workers: 1
+max_trial_retries: 1
+trial_timeout_seconds: 1000
+output_dir: ./outputs/cube_restack_cylinder_comparison/offline_policy
+
+world_state_recorder:
+  enabled: true
+  record_every_n_sim_steps: 10
+  record_rgb: false
+  record_depth: false
+  compress_arrays: true
+
+offline_recovery:
+  enabled: true
+  task_graph: env_configs/cube_restack/offline_parameterized_grasp_replay.graph.yaml
+  recovery_library:
+    GRASP_MISS: [recover_grasp_miss]
+  k_action: 3
+  k_state: 3
+  min_stable_fraction: 0.6667
+  state_sampling:
+    enabled: true
+    window_size: 3
+    min_stable_fraction: 0.6667
+    numeric_abs_tolerance: 0.01
+    numeric_rel_tolerance: 0.05
+    include_entities: false
+    fail_open: false
+    action_aligned_window: true
+    wait_for_stability: true
+    stability_wait_steps: 20
+    sample_sim_steps: 3

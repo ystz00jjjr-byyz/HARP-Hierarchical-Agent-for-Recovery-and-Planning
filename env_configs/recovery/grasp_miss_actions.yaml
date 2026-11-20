@@ -1,0 +1,53 @@
+metadata:
+  status: cross_task_validated
+  exception_id: GRASP_MISS
+  source_task: cube_restack
+  candidate_version: target_size_pose_grasp_v1
+  validation:
+    source_task_successful_replays: 8
+    transfer_task: cube_lifting
+    transfer_evidence_root: outputs/cube_lifting_grasp_miss_transfer_20260916_v2/offline-replay/replay
+    transfer_seeds: [1, 2, 3, 4, 5]
+    transfer_successes: 5
+actions:
+  - id: recover_grasp_miss
+    primitive: grasp_target_from_current_state
+    parameters:
+      target_pose: target_pose_robot_base
+      target_extent: target_extent_robot_base
+    code: |
+      import numpy as np
+
+      target_pose = np.asarray(_offline_params["target_pose"], dtype=float)
+      target_extent = np.asarray(_offline_params["target_extent"], dtype=float)
+      w, x, y, z = target_pose[3:7] / np.linalg.norm(target_pose[3:7])
+      yaw = np.arctan2(2.0 * (w * z + x * y), 1.0 - 2.0 * (y * y + z * z))
+      target_grasp_quat = np.array([0.0, -np.sin(0.5 * yaw), np.cos(0.5 * yaw), 0.0])
+      grasp_z_offset = max(0.004, 0.175 * float(target_extent[2]))
+      target_grasp_pos = target_pose[:3] + np.array([0.0, 0.0, grasp_z_offset])
+      approach_height = max(0.08, 2.0 * float(target_extent[2]))
+      lift_height = max(0.15, 3.0 * float(target_extent[2]))
+      target_lift_pos = target_grasp_pos + np.array([0.0, 0.0, lift_height])
+      home_pose()
+      open_gripper()
+      goto_pose(target_grasp_pos, target_grasp_quat, z_approach=approach_height)
+      close_gripper()
+      goto_pose(target_lift_pos, target_grasp_quat)
+    preconditions:
+      object_stable: true
+    success_conditions:
+      target_grasped: true
+      object_lifted: true
+      wrong_object_grasped: false
+    failure_routes:
+      POSTCONDITION_FAILED: GRASP_RECOVERY_FAILED
+    metadata:
+      status: cross_task_validated
+      source_task: cube_restack
+      validated_tasks: [cube_restack, cube_lifting]
+      candidate_version: target_size_pose_grasp_v1
+      grasp_pose_source: current_target_pose_and_extent
+      orientation_rule: top_down_rotated_by_target_yaw
+      approach_height_rule: max(0.08, 2 * target_height)
+      lift_height_rule: max(0.15, 3 * target_height)
+      accept_semantic_stability: true

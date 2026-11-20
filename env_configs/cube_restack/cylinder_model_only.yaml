@@ -1,0 +1,116 @@
+env:
+  _target_: capx.envs.tasks.franka.franka_cube_restack.FrankaRestackCodeEnv
+  cfg:
+    _target_: capx.envs.tasks.base.CodeExecEnvConfig
+    low_level: franka_robosuite_cubes_restack_low_level
+    low_level_kwargs:
+      cube_A_length: 0.02
+      cube_B_length: 0.02
+      primary_color: red
+      secondary_color: green
+      object_shape: cylinder
+    privileged: false
+    apis: [FrankaControlApi]
+    prompt: |
+      You are controlling a Franka Emika robot. Initially the secondary object
+      is on top of the primary object. Goal: gently place the primary object on
+      the secondary object and open the gripper. The objects may have unfamiliar
+      geometry. Plan exactly three short executable stages, separated by the
+      literal line breakpoint_code_block().
+
+      Stage 1 grasps secondary, moves it at least 0.10 m sideways to a stable
+      table location, releases, and retreats. Stage 2 grasps and lifts primary.
+      Stage 3 re-observes secondary, computes placement height from both object
+      extents, places primary on secondary, releases, and retreats.
+
+      Each stage must contain at most eight physical robot-action calls. Do not
+      put robot or perception API calls inside loops. Use only the stable role
+      names "primary" and "secondary". Variables persist between stages.
+    multi_turn_prompt: |
+      The following code blocks were just executed:
+      ```python
+      {executed_code}
+      ```
+      Console stdout:
+      ```
+      {console_stdout}
+      ```
+      Console stderr:
+      ```
+      {console_stderr}
+      ```
+      The hard stage result and current K=3 world state below are authoritative.
+      Respond with exactly one:
+      - CONTINUE only if the hard stage post-condition passed.
+      - REGENERATE followed by one short recovery stage in a Python code fence.
+      - FINISH only when task_completed is explicitly true.
+
+api_servers:
+  - _target_: capx.serving.launch_sam3_server.main
+    device: cuda
+    port: 8114
+    host: 127.0.0.1
+    checkpoint_path: ${oc.env:SAM3_CHECKPOINT,./checkpoints/sam3.pt}
+  - _target_: capx.serving.launch_contact_graspnet_server.main
+    port: 8115
+    host: 127.0.0.1
+  - _target_: capx.serving.launch_pyroki_server.main
+    port: 8116
+    host: 127.0.0.1
+    robot: panda_description
+    target_link: panda_hand
+
+record_video: false
+use_legacy_multi_turn_decision_prompt: false
+save_multiturn_prompts: true
+world_state_recorder:
+  enabled: true
+  record_every_n_sim_steps: 10
+  record_rgb: false
+  record_depth: false
+  compress_arrays: true
+trials: 1
+num_workers: 1
+max_trial_retries: 1
+trial_timeout_seconds: 1000
+output_dir: ./outputs/cube_restack_cylinder_comparison/model_only
+
+execution_guard:
+  enabled: true
+  reject_empty_code: true
+  max_robot_api_calls_per_block: 8
+  max_expensive_loop_iterations: 0
+  finish_requires_task_completed: true
+  max_decision_reprompts: 2
+  stage_expectations:
+    - name: secondary_object_cleared_and_released
+      required:
+        restack_precondition_cleared: true
+        gripper_open: true
+        object_stable: true
+    - name: primary_object_grasped_and_lifted
+      required:
+        target_grasped: true
+        object_lifted: true
+        wrong_object_grasped: false
+    - name: primary_object_stacked_and_released
+      required:
+        task_completed: true
+        gripper_open: true
+        object_stable: true
+
+text_world_state_feedback:
+  enabled: true
+  window_size: 3
+  min_stable_fraction: 0.6667
+  numeric_abs_tolerance: 0.01
+  numeric_rel_tolerance: 0.05
+  include_entities: true
+  fail_open: false
+  loop_guard_enabled: true
+  max_same_failure_retries: 2
+  min_progress_delta: 0.01
+  action_aligned_window: true
+  wait_for_stability: true
+  stability_wait_steps: 20
+  sample_sim_steps: 3

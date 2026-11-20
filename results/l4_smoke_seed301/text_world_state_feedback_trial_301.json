@@ -1,0 +1,1620 @@
+{
+  "config": {
+    "enabled": true,
+    "window_size": 3,
+    "min_stable_fraction": 0.6667,
+    "numeric_abs_tolerance": 0.015,
+    "numeric_rel_tolerance": 0.05,
+    "include_entities": false,
+    "fail_open": false,
+    "loop_guard_enabled": true,
+    "max_same_failure_retries": 2,
+    "min_progress_delta": 0.01,
+    "action_aligned_window": true,
+    "wait_for_stability": true,
+    "stability_wait_steps": 5,
+    "sample_sim_steps": 3
+  },
+  "history": [
+    {
+      "raw_state": {
+        "world_state_source": "camera_rgbd",
+        "uses_simulator_truth": false,
+        "target_geometry_type": "planar_region",
+        "measurement_fresh": true,
+        "state_provenance": {
+          "object_pose": "sam3_rgbd",
+          "gripper": "robot_proprioception",
+          "target_region": "sam3_rgbd",
+          "completion": "camera_semantic_estimate"
+        },
+        "cube_poses_robot_base": {
+          "primary": [
+            0.5517668517999051,
+            -0.2058980991022273,
+            -0.07815706920623777,
+            0.9904804439875632,
+            0.0,
+            0.0,
+            0.1376535145871682
+          ]
+        },
+        "cube_extents_robot_base": {
+          "primary": [
+            0.042255741247483034,
+            0.06595488111264115,
+            0.047685861587524414
+          ]
+        },
+        "target_pose_robot_base": [
+          0.5517668517999051,
+          -0.2058980991022273,
+          -0.07815706920623777,
+          0.9904804439875632,
+          0.0,
+          0.0,
+          0.1376535145871682
+        ],
+        "target_extent_robot_base": [
+          0.042255741247483034,
+          0.06595488111264115,
+          0.047685861587524414
+        ],
+        "object_shapes": {
+          "primary": "cuboid"
+        },
+        "target_region_center_robot_base": [
+          0.6057,
+          0.3258,
+          -0.10199999999999998
+        ],
+        "target_region_extent_robot_base": [
+          0.1992,
+          0.2063,
+          0.0
+        ],
+        "target_object_center_robot_base": [
+          0.6057,
+          0.3258,
+          -0.07815706920623777
+        ],
+        "target_region_quaternion_wxyz": [
+          0.9998476951563913,
+          0.0,
+          0.0,
+          0.01745240643728351
+        ],
+        "container_rim_z_robot_base": -0.10199999999999998,
+        "scenario_id": "region_cuboid_holdout_301",
+        "target_grasped": false,
+        "wrong_object_grasped": false,
+        "gripper_contact": false,
+        "gripper_open": true,
+        "gripper_closed": false,
+        "object_lifted": false,
+        "object_at_target": false,
+        "object_inside_container": false,
+        "object_stable": true,
+        "container_entry_clear": true,
+        "bin_policy_eligible": true,
+        "target_region_policy_eligible": true,
+        "target_region_clear": true,
+        "geometry_feasible": true,
+        "gripper_feasible": true,
+        "workspace_reachable": true,
+        "object_inside_nominal_workspace": true,
+        "workspace_recovery_feasible": true,
+        "object_near_workspace_boundary": false,
+        "object_observation_ready": true,
+        "target_observation_ready": true,
+        "active_exception_id": "TARGET_POSITION_CHANGED",
+        "unknown_anomaly_active": true,
+        "entry_margin_xy": [
+          0.14240878715962502,
+          0.132158875784461
+        ],
+        "injected_exception": null,
+        "distance_to_target": 0.5344264711479918,
+        "task_completed": false,
+        "reward": 0.0,
+        "recoverable_environment": true,
+        "confidence": 0.8
+      },
+      "summary": {
+        "state": {
+          "active_exception_id": "TARGET_POSITION_CHANGED",
+          "bin_policy_eligible": true,
+          "confidence": 0.8,
+          "container_entry_clear": true,
+          "container_rim_z_robot_base": -0.10199999999999998,
+          "cube_extents_robot_base": {
+            "primary": [
+              0.042255741247483034,
+              0.06595488111264115,
+              0.047685861587524414
+            ]
+          },
+          "cube_poses_robot_base": {
+            "primary": [
+              0.5517668517999051,
+              -0.2058980991022273,
+              -0.07815706920623777,
+              0.9904804439875632,
+              0.0,
+              0.0,
+              0.1376535145871682
+            ]
+          },
+          "distance_to_target": 0.5344264711479918,
+          "entry_margin_xy": [
+            0.14240878715962502,
+            0.132158875784461
+          ],
+          "geometry_feasible": true,
+          "gripper_closed": false,
+          "gripper_contact": false,
+          "gripper_feasible": true,
+          "gripper_open": true,
+          "injected_exception": null,
+          "measurement_fresh": true,
+          "object_at_target": false,
+          "object_inside_container": false,
+          "object_inside_nominal_workspace": true,
+          "object_lifted": false,
+          "object_near_workspace_boundary": false,
+          "object_observation_ready": true,
+          "object_shapes": {
+            "primary": "cuboid"
+          },
+          "object_stable": true,
+          "recoverable_environment": true,
+          "reward": 0.0,
+          "scenario_id": "region_cuboid_holdout_301",
+          "state_provenance": {
+            "completion": "camera_semantic_estimate",
+            "gripper": "robot_proprioception",
+            "object_pose": "sam3_rgbd",
+            "target_region": "sam3_rgbd"
+          },
+          "target_extent_robot_base": [
+            0.042255741247483034,
+            0.06595488111264115,
+            0.047685861587524414
+          ],
+          "target_geometry_type": "planar_region",
+          "target_grasped": false,
+          "target_object_center_robot_base": [
+            0.6057,
+            0.3258,
+            -0.07815706920623777
+          ],
+          "target_observation_ready": true,
+          "target_pose_robot_base": [
+            0.5517668517999051,
+            -0.2058980991022273,
+            -0.07815706920623777,
+            0.9904804439875632,
+            0.0,
+            0.0,
+            0.1376535145871682
+          ],
+          "target_region_center_robot_base": [
+            0.6057,
+            0.3258,
+            -0.10199999999999998
+          ],
+          "target_region_clear": true,
+          "target_region_extent_robot_base": [
+            0.1992,
+            0.2063,
+            0.0
+          ],
+          "target_region_policy_eligible": true,
+          "target_region_quaternion_wxyz": [
+            0.9998476951563913,
+            0.0,
+            0.0,
+            0.01745240643728351
+          ],
+          "task_completed": false,
+          "unknown_anomaly_active": true,
+          "uses_simulator_truth": false,
+          "workspace_reachable": true,
+          "workspace_recovery_feasible": true,
+          "world_state_source": "camera_rgbd",
+          "wrong_object_grasped": false
+        },
+        "confidence": 1.0,
+        "stable": true,
+        "unstable_signals": [],
+        "sample_count": 1
+      },
+      "recovery_directive": {
+        "action": "observe",
+        "repeated_failures": 0,
+        "progress_detected": false,
+        "reason": "initial state"
+      }
+    },
+    {
+      "capture_mode": "action_aligned",
+      "raw_state": {
+        "world_state_source": "camera_rgbd",
+        "uses_simulator_truth": false,
+        "target_geometry_type": "planar_region",
+        "measurement_fresh": true,
+        "state_provenance": {
+          "object_pose": "robot_proprioceptive_grasp_track",
+          "gripper": "robot_proprioception",
+          "target_region": "sam3_rgbd",
+          "completion": "camera_semantic_estimate"
+        },
+        "cube_poses_robot_base": {
+          "primary": [
+            0.5518914579075247,
+            -0.20593876562420552,
+            0.19223671608864967,
+            0.9904804439875632,
+            0.0,
+            0.0,
+            0.1376535145871682
+          ]
+        },
+        "cube_extents_robot_base": {
+          "primary": [
+            0.042255741247483034,
+            0.06595488111264115,
+            0.047685861587524414
+          ]
+        },
+        "target_pose_robot_base": [
+          0.5518914579075247,
+          -0.20593876562420552,
+          0.19223671608864967,
+          0.9904804439875632,
+          0.0,
+          0.0,
+          0.1376535145871682
+        ],
+        "target_extent_robot_base": [
+          0.042255741247483034,
+          0.06595488111264115,
+          0.047685861587524414
+        ],
+        "object_shapes": {
+          "primary": "cuboid"
+        },
+        "target_region_center_robot_base": [
+          0.6057,
+          0.3258,
+          -0.10199999999999998
+        ],
+        "target_region_extent_robot_base": [
+          0.1992,
+          0.2063,
+          0.0
+        ],
+        "target_object_center_robot_base": [
+          0.6057,
+          0.3258,
+          -0.07815706920623777
+        ],
+        "target_region_quaternion_wxyz": [
+          0.9998476951563913,
+          0.0,
+          0.0,
+          0.01745240643728351
+        ],
+        "container_rim_z_robot_base": -0.10199999999999998,
+        "scenario_id": "region_cuboid_holdout_301",
+        "target_grasped": true,
+        "wrong_object_grasped": false,
+        "gripper_contact": true,
+        "gripper_open": false,
+        "gripper_closed": true,
+        "object_lifted": true,
+        "object_at_target": false,
+        "object_inside_container": false,
+        "object_stable": false,
+        "container_entry_clear": true,
+        "bin_policy_eligible": true,
+        "target_region_policy_eligible": true,
+        "target_region_clear": true,
+        "geometry_feasible": true,
+        "gripper_feasible": true,
+        "workspace_reachable": true,
+        "object_inside_nominal_workspace": true,
+        "workspace_recovery_feasible": true,
+        "object_near_workspace_boundary": false,
+        "object_observation_ready": true,
+        "target_observation_ready": true,
+        "active_exception_id": "TARGET_POSITION_CHANGED",
+        "unknown_anomaly_active": true,
+        "entry_margin_xy": [
+          0.14240878715962502,
+          0.132158875784461
+        ],
+        "injected_exception": null,
+        "distance_to_target": 0.5989609947198308,
+        "task_completed": false,
+        "reward": 0.0,
+        "recoverable_environment": true,
+        "confidence": 0.0
+      },
+      "raw_window": [
+        {
+          "world_state_source": "camera_rgbd",
+          "uses_simulator_truth": false,
+          "target_geometry_type": "planar_region",
+          "measurement_fresh": true,
+          "state_provenance": {
+            "object_pose": "robot_proprioceptive_grasp_track",
+            "gripper": "robot_proprioception",
+            "target_region": "sam3_rgbd",
+            "completion": "camera_semantic_estimate"
+          },
+          "cube_poses_robot_base": {
+            "primary": [
+              0.552184862945276,
+              -0.2060515389185296,
+              0.19081649207462964,
+              0.9904804439875632,
+              0.0,
+              0.0,
+              0.1376535145871682
+            ]
+          },
+          "cube_extents_robot_base": {
+            "primary": [
+              0.042255741247483034,
+              0.06595488111264115,
+              0.047685861587524414
+            ]
+          },
+          "target_pose_robot_base": [
+            0.552184862945276,
+            -0.2060515389185296,
+            0.19081649207462964,
+            0.9904804439875632,
+            0.0,
+            0.0,
+            0.1376535145871682
+          ],
+          "target_extent_robot_base": [
+            0.042255741247483034,
+            0.06595488111264115,
+            0.047685861587524414
+          ],
+          "object_shapes": {
+            "primary": "cuboid"
+          },
+          "target_region_center_robot_base": [
+            0.6057,
+            0.3258,
+            -0.10199999999999998
+          ],
+          "target_region_extent_robot_base": [
+            0.1992,
+            0.2063,
+            0.0
+          ],
+          "target_object_center_robot_base": [
+            0.6057,
+            0.3258,
+            -0.07815706920623777
+          ],
+          "target_region_quaternion_wxyz": [
+            0.9998476951563913,
+            0.0,
+            0.0,
+            0.01745240643728351
+          ],
+          "container_rim_z_robot_base": -0.10199999999999998,
+          "scenario_id": "region_cuboid_holdout_301",
+          "target_grasped": true,
+          "wrong_object_grasped": false,
+          "gripper_contact": true,
+          "gripper_open": false,
+          "gripper_closed": true,
+          "object_lifted": true,
+          "object_at_target": false,
+          "object_inside_container": false,
+          "object_stable": false,
+          "container_entry_clear": true,
+          "bin_policy_eligible": true,
+          "target_region_policy_eligible": true,
+          "target_region_clear": true,
+          "geometry_feasible": true,
+          "gripper_feasible": true,
+          "workspace_reachable": true,
+          "object_inside_nominal_workspace": true,
+          "workspace_recovery_feasible": true,
+          "object_near_workspace_boundary": false,
+          "object_observation_ready": true,
+          "target_observation_ready": true,
+          "active_exception_id": "TARGET_POSITION_CHANGED",
+          "unknown_anomaly_active": true,
+          "entry_margin_xy": [
+            0.14240878715962502,
+            0.132158875784461
+          ],
+          "injected_exception": null,
+          "distance_to_target": 0.5983951086131191,
+          "task_completed": false,
+          "reward": 0.0,
+          "recoverable_environment": true,
+          "confidence": 0.0
+        },
+        {
+          "world_state_source": "camera_rgbd",
+          "uses_simulator_truth": false,
+          "target_geometry_type": "planar_region",
+          "measurement_fresh": true,
+          "state_provenance": {
+            "object_pose": "robot_proprioceptive_grasp_track",
+            "gripper": "robot_proprioception",
+            "target_region": "sam3_rgbd",
+            "completion": "camera_semantic_estimate"
+          },
+          "cube_poses_robot_base": {
+            "primary": [
+              0.5519982309035155,
+              -0.20597977276811735,
+              0.19172252890044103,
+              0.9904804439875632,
+              0.0,
+              0.0,
+              0.1376535145871682
+            ]
+          },
+          "cube_extents_robot_base": {
+            "primary": [
+              0.042255741247483034,
+              0.06595488111264115,
+              0.047685861587524414
+            ]
+          },
+          "target_pose_robot_base": [
+            0.5519982309035155,
+            -0.20597977276811735,
+            0.19172252890044103,
+            0.9904804439875632,
+            0.0,
+            0.0,
+            0.1376535145871682
+          ],
+          "target_extent_robot_base": [
+            0.042255741247483034,
+            0.06595488111264115,
+            0.047685861587524414
+          ],
+          "object_shapes": {
+            "primary": "cuboid"
+          },
+          "target_region_center_robot_base": [
+            0.6057,
+            0.3258,
+            -0.10199999999999998
+          ],
+          "target_region_extent_robot_base": [
+            0.1992,
+            0.2063,
+            0.0
+          ],
+          "target_object_center_robot_base": [
+            0.6057,
+            0.3258,
+            -0.07815706920623777
+          ],
+          "target_region_quaternion_wxyz": [
+            0.9998476951563913,
+            0.0,
+            0.0,
+            0.01745240643728351
+          ],
+          "container_rim_z_robot_base": -0.10199999999999998,
+          "scenario_id": "region_cuboid_holdout_301",
+          "target_grasped": true,
+          "wrong_object_grasped": false,
+          "gripper_contact": true,
+          "gripper_open": false,
+          "gripper_closed": true,
+          "object_lifted": true,
+          "object_at_target": false,
+          "object_inside_container": false,
+          "object_stable": false,
+          "container_entry_clear": true,
+          "bin_policy_eligible": true,
+          "target_region_policy_eligible": true,
+          "target_region_clear": true,
+          "geometry_feasible": true,
+          "gripper_feasible": true,
+          "workspace_reachable": true,
+          "object_inside_nominal_workspace": true,
+          "workspace_recovery_feasible": true,
+          "object_near_workspace_boundary": false,
+          "object_observation_ready": true,
+          "target_observation_ready": true,
+          "active_exception_id": "TARGET_POSITION_CHANGED",
+          "unknown_anomaly_active": true,
+          "entry_margin_xy": [
+            0.14240878715962502,
+            0.132158875784461
+          ],
+          "injected_exception": null,
+          "distance_to_target": 0.5987558803081813,
+          "task_completed": false,
+          "reward": 0.0,
+          "recoverable_environment": true,
+          "confidence": 0.0
+        },
+        {
+          "world_state_source": "camera_rgbd",
+          "uses_simulator_truth": false,
+          "target_geometry_type": "planar_region",
+          "measurement_fresh": true,
+          "state_provenance": {
+            "object_pose": "robot_proprioceptive_grasp_track",
+            "gripper": "robot_proprioception",
+            "target_region": "sam3_rgbd",
+            "completion": "camera_semantic_estimate"
+          },
+          "cube_poses_robot_base": {
+            "primary": [
+              0.5518914579075247,
+              -0.20593876562420552,
+              0.19223671608864967,
+              0.9904804439875632,
+              0.0,
+              0.0,
+              0.1376535145871682
+            ]
+          },
+          "cube_extents_robot_base": {
+            "primary": [
+              0.042255741247483034,
+              0.06595488111264115,
+              0.047685861587524414
+            ]
+          },
+          "target_pose_robot_base": [
+            0.5518914579075247,
+            -0.20593876562420552,
+            0.19223671608864967,
+            0.9904804439875632,
+            0.0,
+            0.0,
+            0.1376535145871682
+          ],
+          "target_extent_robot_base": [
+            0.042255741247483034,
+            0.06595488111264115,
+            0.047685861587524414
+          ],
+          "object_shapes": {
+            "primary": "cuboid"
+          },
+          "target_region_center_robot_base": [
+            0.6057,
+            0.3258,
+            -0.10199999999999998
+          ],
+          "target_region_extent_robot_base": [
+            0.1992,
+            0.2063,
+            0.0
+          ],
+          "target_object_center_robot_base": [
+            0.6057,
+            0.3258,
+            -0.07815706920623777
+          ],
+          "target_region_quaternion_wxyz": [
+            0.9998476951563913,
+            0.0,
+            0.0,
+            0.01745240643728351
+          ],
+          "container_rim_z_robot_base": -0.10199999999999998,
+          "scenario_id": "region_cuboid_holdout_301",
+          "target_grasped": true,
+          "wrong_object_grasped": false,
+          "gripper_contact": true,
+          "gripper_open": false,
+          "gripper_closed": true,
+          "object_lifted": true,
+          "object_at_target": false,
+          "object_inside_container": false,
+          "object_stable": false,
+          "container_entry_clear": true,
+          "bin_policy_eligible": true,
+          "target_region_policy_eligible": true,
+          "target_region_clear": true,
+          "geometry_feasible": true,
+          "gripper_feasible": true,
+          "workspace_reachable": true,
+          "object_inside_nominal_workspace": true,
+          "workspace_recovery_feasible": true,
+          "object_near_workspace_boundary": false,
+          "object_observation_ready": true,
+          "target_observation_ready": true,
+          "active_exception_id": "TARGET_POSITION_CHANGED",
+          "unknown_anomaly_active": true,
+          "entry_margin_xy": [
+            0.14240878715962502,
+            0.132158875784461
+          ],
+          "injected_exception": null,
+          "distance_to_target": 0.5989609947198308,
+          "task_completed": false,
+          "reward": 0.0,
+          "recoverable_environment": true,
+          "confidence": 0.0
+        }
+      ],
+      "summary": {
+        "state": {
+          "active_exception_id": "TARGET_POSITION_CHANGED",
+          "bin_policy_eligible": true,
+          "confidence": 0.0,
+          "container_entry_clear": true,
+          "container_rim_z_robot_base": -0.10199999999999998,
+          "cube_extents_robot_base": {
+            "primary": [
+              0.042255741247483034,
+              0.06595488111264115,
+              0.047685861587524414
+            ]
+          },
+          "cube_poses_robot_base": {
+            "primary": [
+              0.5519982309035155,
+              -0.20597977276811735,
+              0.19172252890044103,
+              0.9904804439875632,
+              0.0,
+              0.0,
+              0.1376535145871682
+            ]
+          },
+          "distance_to_target": 0.5987558803081813,
+          "entry_margin_xy": [
+            0.14240878715962502,
+            0.132158875784461
+          ],
+          "geometry_feasible": true,
+          "gripper_closed": true,
+          "gripper_contact": true,
+          "gripper_feasible": true,
+          "gripper_open": false,
+          "injected_exception": null,
+          "measurement_fresh": true,
+          "object_at_target": false,
+          "object_inside_container": false,
+          "object_inside_nominal_workspace": true,
+          "object_lifted": true,
+          "object_near_workspace_boundary": false,
+          "object_observation_ready": true,
+          "object_shapes": {
+            "primary": "cuboid"
+          },
+          "object_stable": false,
+          "recoverable_environment": true,
+          "reward": 0.0,
+          "scenario_id": "region_cuboid_holdout_301",
+          "state_provenance": {
+            "completion": "camera_semantic_estimate",
+            "gripper": "robot_proprioception",
+            "object_pose": "robot_proprioceptive_grasp_track",
+            "target_region": "sam3_rgbd"
+          },
+          "target_extent_robot_base": [
+            0.042255741247483034,
+            0.06595488111264115,
+            0.047685861587524414
+          ],
+          "target_geometry_type": "planar_region",
+          "target_grasped": true,
+          "target_object_center_robot_base": [
+            0.6057,
+            0.3258,
+            -0.07815706920623777
+          ],
+          "target_observation_ready": true,
+          "target_pose_robot_base": [
+            0.5519982309035155,
+            -0.20597977276811735,
+            0.19172252890044103,
+            0.9904804439875632,
+            0.0,
+            0.0,
+            0.1376535145871682
+          ],
+          "target_region_center_robot_base": [
+            0.6057,
+            0.3258,
+            -0.10199999999999998
+          ],
+          "target_region_clear": true,
+          "target_region_extent_robot_base": [
+            0.1992,
+            0.2063,
+            0.0
+          ],
+          "target_region_policy_eligible": true,
+          "target_region_quaternion_wxyz": [
+            0.9998476951563913,
+            0.0,
+            0.0,
+            0.01745240643728351
+          ],
+          "task_completed": false,
+          "unknown_anomaly_active": true,
+          "uses_simulator_truth": false,
+          "workspace_reachable": true,
+          "workspace_recovery_feasible": true,
+          "world_state_source": "camera_rgbd",
+          "wrong_object_grasped": false
+        },
+        "confidence": 1.0,
+        "stable": true,
+        "unstable_signals": [],
+        "sample_count": 3
+      },
+      "recovery_stage": "LIFTED_READY_TO_PLACE",
+      "recovery_directive": {
+        "action": "wait",
+        "repeated_failures": 0,
+        "progress_detected": false,
+        "reason": "post-action state is still moving or lacks K-frame consensus"
+      }
+    },
+    {
+      "capture_mode": "action_aligned",
+      "raw_state": {
+        "world_state_source": "camera_rgbd",
+        "uses_simulator_truth": false,
+        "target_geometry_type": "planar_region",
+        "measurement_fresh": true,
+        "state_provenance": {
+          "object_pose": "robot_proprioceptive_grasp_track",
+          "gripper": "robot_proprioception",
+          "target_region": "sam3_rgbd",
+          "completion": "camera_semantic_estimate"
+        },
+        "cube_poses_robot_base": {
+          "primary": [
+            0.5517679747190826,
+            -0.20589145599619268,
+            0.1928273576542326,
+            0.9904804439875632,
+            0.0,
+            0.0,
+            0.1376535145871682
+          ]
+        },
+        "cube_extents_robot_base": {
+          "primary": [
+            0.042255741247483034,
+            0.06595488111264115,
+            0.047685861587524414
+          ]
+        },
+        "target_pose_robot_base": [
+          0.5517679747190826,
+          -0.20589145599619268,
+          0.1928273576542326,
+          0.9904804439875632,
+          0.0,
+          0.0,
+          0.1376535145871682
+        ],
+        "target_extent_robot_base": [
+          0.042255741247483034,
+          0.06595488111264115,
+          0.047685861587524414
+        ],
+        "object_shapes": {
+          "primary": "cuboid"
+        },
+        "target_region_center_robot_base": [
+          0.6057,
+          0.3258,
+          -0.10199999999999998
+        ],
+        "target_region_extent_robot_base": [
+          0.1992,
+          0.2063,
+          0.0
+        ],
+        "target_object_center_robot_base": [
+          0.6057,
+          0.3258,
+          -0.07815706920623777
+        ],
+        "target_region_quaternion_wxyz": [
+          0.9998476951563913,
+          0.0,
+          0.0,
+          0.01745240643728351
+        ],
+        "container_rim_z_robot_base": -0.10199999999999998,
+        "scenario_id": "region_cuboid_holdout_301",
+        "target_grasped": true,
+        "wrong_object_grasped": false,
+        "gripper_contact": true,
+        "gripper_open": false,
+        "gripper_closed": true,
+        "object_lifted": true,
+        "object_at_target": false,
+        "object_inside_container": false,
+        "object_stable": false,
+        "container_entry_clear": true,
+        "bin_policy_eligible": true,
+        "target_region_policy_eligible": true,
+        "target_region_clear": true,
+        "geometry_feasible": true,
+        "gripper_feasible": true,
+        "workspace_reachable": true,
+        "object_inside_nominal_workspace": true,
+        "workspace_recovery_feasible": true,
+        "object_near_workspace_boundary": false,
+        "object_observation_ready": true,
+        "target_observation_ready": true,
+        "active_exception_id": "TARGET_POSITION_CHANGED",
+        "unknown_anomaly_active": true,
+        "entry_margin_xy": [
+          0.14240878715962502,
+          0.132158875784461
+        ],
+        "injected_exception": null,
+        "distance_to_target": 0.5991969854156064,
+        "task_completed": false,
+        "reward": 0.0,
+        "recoverable_environment": true,
+        "confidence": 0.0
+      },
+      "raw_window": [
+        {
+          "world_state_source": "camera_rgbd",
+          "uses_simulator_truth": false,
+          "target_geometry_type": "planar_region",
+          "measurement_fresh": true,
+          "state_provenance": {
+            "object_pose": "robot_proprioceptive_grasp_track",
+            "gripper": "robot_proprioception",
+            "target_region": "sam3_rgbd",
+            "completion": "camera_semantic_estimate"
+          },
+          "cube_poses_robot_base": {
+            "primary": [
+              0.5518053380551514,
+              -0.2059057413460913,
+              0.19264915190836562,
+              0.9904804439875632,
+              0.0,
+              0.0,
+              0.1376535145871682
+            ]
+          },
+          "cube_extents_robot_base": {
+            "primary": [
+              0.042255741247483034,
+              0.06595488111264115,
+              0.047685861587524414
+            ]
+          },
+          "target_pose_robot_base": [
+            0.5518053380551514,
+            -0.2059057413460913,
+            0.19264915190836562,
+            0.9904804439875632,
+            0.0,
+            0.0,
+            0.1376535145871682
+          ],
+          "target_extent_robot_base": [
+            0.042255741247483034,
+            0.06595488111264115,
+            0.047685861587524414
+          ],
+          "object_shapes": {
+            "primary": "cuboid"
+          },
+          "target_region_center_robot_base": [
+            0.6057,
+            0.3258,
+            -0.10199999999999998
+          ],
+          "target_region_extent_robot_base": [
+            0.1992,
+            0.2063,
+            0.0
+          ],
+          "target_object_center_robot_base": [
+            0.6057,
+            0.3258,
+            -0.07815706920623777
+          ],
+          "target_region_quaternion_wxyz": [
+            0.9998476951563913,
+            0.0,
+            0.0,
+            0.01745240643728351
+          ],
+          "container_rim_z_robot_base": -0.10199999999999998,
+          "scenario_id": "region_cuboid_holdout_301",
+          "target_grasped": true,
+          "wrong_object_grasped": false,
+          "gripper_contact": true,
+          "gripper_open": false,
+          "gripper_closed": true,
+          "object_lifted": true,
+          "object_at_target": false,
+          "object_inside_container": false,
+          "object_stable": false,
+          "container_entry_clear": true,
+          "bin_policy_eligible": true,
+          "target_region_policy_eligible": true,
+          "target_region_clear": true,
+          "geometry_feasible": true,
+          "gripper_feasible": true,
+          "workspace_reachable": true,
+          "object_inside_nominal_workspace": true,
+          "workspace_recovery_feasible": true,
+          "object_near_workspace_boundary": false,
+          "object_observation_ready": true,
+          "target_observation_ready": true,
+          "active_exception_id": "TARGET_POSITION_CHANGED",
+          "unknown_anomaly_active": true,
+          "entry_margin_xy": [
+            0.14240878715962502,
+            0.132158875784461
+          ],
+          "injected_exception": null,
+          "distance_to_target": 0.5991257291762034,
+          "task_completed": false,
+          "reward": 0.0,
+          "recoverable_environment": true,
+          "confidence": 0.0
+        },
+        {
+          "world_state_source": "camera_rgbd",
+          "uses_simulator_truth": false,
+          "target_geometry_type": "planar_region",
+          "measurement_fresh": true,
+          "state_provenance": {
+            "object_pose": "robot_proprioceptive_grasp_track",
+            "gripper": "robot_proprioception",
+            "target_region": "sam3_rgbd",
+            "completion": "camera_semantic_estimate"
+          },
+          "cube_poses_robot_base": {
+            "primary": [
+              0.5517815211058335,
+              -0.20589662808627693,
+              0.19276281075419527,
+              0.9904804439875632,
+              0.0,
+              0.0,
+              0.1376535145871682
+            ]
+          },
+          "cube_extents_robot_base": {
+            "primary": [
+              0.042255741247483034,
+              0.06595488111264115,
+              0.047685861587524414
+            ]
+          },
+          "target_pose_robot_base": [
+            0.5517815211058335,
+            -0.20589662808627693,
+            0.19276281075419527,
+            0.9904804439875632,
+            0.0,
+            0.0,
+            0.1376535145871682
+          ],
+          "target_extent_robot_base": [
+            0.042255741247483034,
+            0.06595488111264115,
+            0.047685861587524414
+          ],
+          "object_shapes": {
+            "primary": "cuboid"
+          },
+          "target_region_center_robot_base": [
+            0.6057,
+            0.3258,
+            -0.10199999999999998
+          ],
+          "target_region_extent_robot_base": [
+            0.1992,
+            0.2063,
+            0.0
+          ],
+          "target_object_center_robot_base": [
+            0.6057,
+            0.3258,
+            -0.07815706920623777
+          ],
+          "target_region_quaternion_wxyz": [
+            0.9998476951563913,
+            0.0,
+            0.0,
+            0.01745240643728351
+          ],
+          "container_rim_z_robot_base": -0.10199999999999998,
+          "scenario_id": "region_cuboid_holdout_301",
+          "target_grasped": true,
+          "wrong_object_grasped": false,
+          "gripper_contact": true,
+          "gripper_open": false,
+          "gripper_closed": true,
+          "object_lifted": true,
+          "object_at_target": false,
+          "object_inside_container": false,
+          "object_stable": false,
+          "container_entry_clear": true,
+          "bin_policy_eligible": true,
+          "target_region_policy_eligible": true,
+          "target_region_clear": true,
+          "geometry_feasible": true,
+          "gripper_feasible": true,
+          "workspace_reachable": true,
+          "object_inside_nominal_workspace": true,
+          "workspace_recovery_feasible": true,
+          "object_near_workspace_boundary": false,
+          "object_observation_ready": true,
+          "target_observation_ready": true,
+          "active_exception_id": "TARGET_POSITION_CHANGED",
+          "unknown_anomaly_active": true,
+          "entry_margin_xy": [
+            0.14240878715962502,
+            0.132158875784461
+          ],
+          "injected_exception": null,
+          "distance_to_target": 0.5991711675659576,
+          "task_completed": false,
+          "reward": 0.0,
+          "recoverable_environment": true,
+          "confidence": 0.0
+        },
+        {
+          "world_state_source": "camera_rgbd",
+          "uses_simulator_truth": false,
+          "target_geometry_type": "planar_region",
+          "measurement_fresh": true,
+          "state_provenance": {
+            "object_pose": "robot_proprioceptive_grasp_track",
+            "gripper": "robot_proprioception",
+            "target_region": "sam3_rgbd",
+            "completion": "camera_semantic_estimate"
+          },
+          "cube_poses_robot_base": {
+            "primary": [
+              0.5517679747190826,
+              -0.20589145599619268,
+              0.1928273576542326,
+              0.9904804439875632,
+              0.0,
+              0.0,
+              0.1376535145871682
+            ]
+          },
+          "cube_extents_robot_base": {
+            "primary": [
+              0.042255741247483034,
+              0.06595488111264115,
+              0.047685861587524414
+            ]
+          },
+          "target_pose_robot_base": [
+            0.5517679747190826,
+            -0.20589145599619268,
+            0.1928273576542326,
+            0.9904804439875632,
+            0.0,
+            0.0,
+            0.1376535145871682
+          ],
+          "target_extent_robot_base": [
+            0.042255741247483034,
+            0.06595488111264115,
+            0.047685861587524414
+          ],
+          "object_shapes": {
+            "primary": "cuboid"
+          },
+          "target_region_center_robot_base": [
+            0.6057,
+            0.3258,
+            -0.10199999999999998
+          ],
+          "target_region_extent_robot_base": [
+            0.1992,
+            0.2063,
+            0.0
+          ],
+          "target_object_center_robot_base": [
+            0.6057,
+            0.3258,
+            -0.07815706920623777
+          ],
+          "target_region_quaternion_wxyz": [
+            0.9998476951563913,
+            0.0,
+            0.0,
+            0.01745240643728351
+          ],
+          "container_rim_z_robot_base": -0.10199999999999998,
+          "scenario_id": "region_cuboid_holdout_301",
+          "target_grasped": true,
+          "wrong_object_grasped": false,
+          "gripper_contact": true,
+          "gripper_open": false,
+          "gripper_closed": true,
+          "object_lifted": true,
+          "object_at_target": false,
+          "object_inside_container": false,
+          "object_stable": false,
+          "container_entry_clear": true,
+          "bin_policy_eligible": true,
+          "target_region_policy_eligible": true,
+          "target_region_clear": true,
+          "geometry_feasible": true,
+          "gripper_feasible": true,
+          "workspace_reachable": true,
+          "object_inside_nominal_workspace": true,
+          "workspace_recovery_feasible": true,
+          "object_near_workspace_boundary": false,
+          "object_observation_ready": true,
+          "target_observation_ready": true,
+          "active_exception_id": "TARGET_POSITION_CHANGED",
+          "unknown_anomaly_active": true,
+          "entry_margin_xy": [
+            0.14240878715962502,
+            0.132158875784461
+          ],
+          "injected_exception": null,
+          "distance_to_target": 0.5991969854156064,
+          "task_completed": false,
+          "reward": 0.0,
+          "recoverable_environment": true,
+          "confidence": 0.0
+        }
+      ],
+      "summary": {
+        "state": {
+          "active_exception_id": "TARGET_POSITION_CHANGED",
+          "bin_policy_eligible": true,
+          "confidence": 0.0,
+          "container_entry_clear": true,
+          "container_rim_z_robot_base": -0.10199999999999998,
+          "cube_extents_robot_base": {
+            "primary": [
+              0.042255741247483034,
+              0.06595488111264115,
+              0.047685861587524414
+            ]
+          },
+          "cube_poses_robot_base": {
+            "primary": [
+              0.5517815211058335,
+              -0.20589662808627693,
+              0.19276281075419527,
+              0.9904804439875632,
+              0.0,
+              0.0,
+              0.1376535145871682
+            ]
+          },
+          "distance_to_target": 0.5991711675659576,
+          "entry_margin_xy": [
+            0.14240878715962502,
+            0.132158875784461
+          ],
+          "geometry_feasible": true,
+          "gripper_closed": true,
+          "gripper_contact": true,
+          "gripper_feasible": true,
+          "gripper_open": false,
+          "injected_exception": null,
+          "measurement_fresh": true,
+          "object_at_target": false,
+          "object_inside_container": false,
+          "object_inside_nominal_workspace": true,
+          "object_lifted": true,
+          "object_near_workspace_boundary": false,
+          "object_observation_ready": true,
+          "object_shapes": {
+            "primary": "cuboid"
+          },
+          "object_stable": false,
+          "recoverable_environment": true,
+          "reward": 0.0,
+          "scenario_id": "region_cuboid_holdout_301",
+          "state_provenance": {
+            "completion": "camera_semantic_estimate",
+            "gripper": "robot_proprioception",
+            "object_pose": "robot_proprioceptive_grasp_track",
+            "target_region": "sam3_rgbd"
+          },
+          "target_extent_robot_base": [
+            0.042255741247483034,
+            0.06595488111264115,
+            0.047685861587524414
+          ],
+          "target_geometry_type": "planar_region",
+          "target_grasped": true,
+          "target_object_center_robot_base": [
+            0.6057,
+            0.3258,
+            -0.07815706920623777
+          ],
+          "target_observation_ready": true,
+          "target_pose_robot_base": [
+            0.5517815211058335,
+            -0.20589662808627693,
+            0.19276281075419527,
+            0.9904804439875632,
+            0.0,
+            0.0,
+            0.1376535145871682
+          ],
+          "target_region_center_robot_base": [
+            0.6057,
+            0.3258,
+            -0.10199999999999998
+          ],
+          "target_region_clear": true,
+          "target_region_extent_robot_base": [
+            0.1992,
+            0.2063,
+            0.0
+          ],
+          "target_region_policy_eligible": true,
+          "target_region_quaternion_wxyz": [
+            0.9998476951563913,
+            0.0,
+            0.0,
+            0.01745240643728351
+          ],
+          "task_completed": false,
+          "unknown_anomaly_active": true,
+          "uses_simulator_truth": false,
+          "workspace_reachable": true,
+          "workspace_recovery_feasible": true,
+          "world_state_source": "camera_rgbd",
+          "wrong_object_grasped": false
+        },
+        "confidence": 1.0,
+        "stable": true,
+        "unstable_signals": [],
+        "sample_count": 3
+      },
+      "recovery_stage": "LIFTED_READY_TO_PLACE",
+      "recovery_directive": {
+        "action": "wait",
+        "repeated_failures": 0,
+        "progress_detected": false,
+        "reason": "post-action state is still moving or lacks K-frame consensus"
+      }
+    },
+    {
+      "capture_mode": "static_final",
+      "raw_state": {
+        "world_state_source": "camera_rgbd",
+        "uses_simulator_truth": false,
+        "target_geometry_type": "planar_region",
+        "measurement_fresh": false,
+        "state_provenance": {
+          "object_pose": "sam3_rgbd_unavailable",
+          "gripper": "robot_proprioception",
+          "target_region": "sam3_rgbd",
+          "completion": "fail_closed"
+        },
+        "target_region_center_robot_base": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "target_region_extent_robot_base": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "target_object_center_robot_base": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "target_region_quaternion_wxyz": [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "container_rim_z_robot_base": 0.0,
+        "scenario_id": "region_cuboid_holdout_301",
+        "target_grasped": false,
+        "wrong_object_grasped": false,
+        "gripper_contact": false,
+        "gripper_open": true,
+        "gripper_closed": false,
+        "object_lifted": false,
+        "object_at_target": false,
+        "object_inside_container": false,
+        "object_inside_target_region": false,
+        "object_stable": false,
+        "container_entry_clear": false,
+        "bin_policy_eligible": false,
+        "target_region_policy_eligible": false,
+        "target_region_clear": true,
+        "geometry_feasible": false,
+        "gripper_feasible": false,
+        "workspace_reachable": false,
+        "workspace_recovery_feasible": false,
+        "object_observation_ready": false,
+        "target_observation_ready": false,
+        "task_completed": false,
+        "reward": 0.0,
+        "recoverable_environment": false,
+        "confidence": 0.0
+      },
+      "raw_window": [
+        {
+          "world_state_source": "camera_rgbd",
+          "uses_simulator_truth": false,
+          "target_geometry_type": "planar_region",
+          "measurement_fresh": false,
+          "state_provenance": {
+            "object_pose": "sam3_rgbd_unavailable",
+            "gripper": "robot_proprioception",
+            "target_region": "sam3_rgbd",
+            "completion": "fail_closed"
+          },
+          "target_region_center_robot_base": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "target_region_extent_robot_base": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "target_object_center_robot_base": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "target_region_quaternion_wxyz": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "container_rim_z_robot_base": 0.0,
+          "scenario_id": "region_cuboid_holdout_301",
+          "target_grasped": false,
+          "wrong_object_grasped": false,
+          "gripper_contact": false,
+          "gripper_open": true,
+          "gripper_closed": false,
+          "object_lifted": false,
+          "object_at_target": false,
+          "object_inside_container": false,
+          "object_inside_target_region": false,
+          "object_stable": false,
+          "container_entry_clear": false,
+          "bin_policy_eligible": false,
+          "target_region_policy_eligible": false,
+          "target_region_clear": true,
+          "geometry_feasible": false,
+          "gripper_feasible": false,
+          "workspace_reachable": false,
+          "workspace_recovery_feasible": false,
+          "object_observation_ready": false,
+          "target_observation_ready": false,
+          "task_completed": false,
+          "reward": 0.0,
+          "recoverable_environment": false,
+          "confidence": 0.0
+        },
+        {
+          "world_state_source": "camera_rgbd",
+          "uses_simulator_truth": false,
+          "target_geometry_type": "planar_region",
+          "measurement_fresh": false,
+          "state_provenance": {
+            "object_pose": "sam3_rgbd_unavailable",
+            "gripper": "robot_proprioception",
+            "target_region": "sam3_rgbd",
+            "completion": "fail_closed"
+          },
+          "target_region_center_robot_base": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "target_region_extent_robot_base": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "target_object_center_robot_base": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "target_region_quaternion_wxyz": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "container_rim_z_robot_base": 0.0,
+          "scenario_id": "region_cuboid_holdout_301",
+          "target_grasped": false,
+          "wrong_object_grasped": false,
+          "gripper_contact": false,
+          "gripper_open": true,
+          "gripper_closed": false,
+          "object_lifted": false,
+          "object_at_target": false,
+          "object_inside_container": false,
+          "object_inside_target_region": false,
+          "object_stable": false,
+          "container_entry_clear": false,
+          "bin_policy_eligible": false,
+          "target_region_policy_eligible": false,
+          "target_region_clear": true,
+          "geometry_feasible": false,
+          "gripper_feasible": false,
+          "workspace_reachable": false,
+          "workspace_recovery_feasible": false,
+          "object_observation_ready": false,
+          "target_observation_ready": false,
+          "task_completed": false,
+          "reward": 0.0,
+          "recoverable_environment": false,
+          "confidence": 0.0
+        },
+        {
+          "world_state_source": "camera_rgbd",
+          "uses_simulator_truth": false,
+          "target_geometry_type": "planar_region",
+          "measurement_fresh": false,
+          "state_provenance": {
+            "object_pose": "sam3_rgbd_unavailable",
+            "gripper": "robot_proprioception",
+            "target_region": "sam3_rgbd",
+            "completion": "fail_closed"
+          },
+          "target_region_center_robot_base": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "target_region_extent_robot_base": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "target_object_center_robot_base": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "target_region_quaternion_wxyz": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "container_rim_z_robot_base": 0.0,
+          "scenario_id": "region_cuboid_holdout_301",
+          "target_grasped": false,
+          "wrong_object_grasped": false,
+          "gripper_contact": false,
+          "gripper_open": true,
+          "gripper_closed": false,
+          "object_lifted": false,
+          "object_at_target": false,
+          "object_inside_container": false,
+          "object_inside_target_region": false,
+          "object_stable": false,
+          "container_entry_clear": false,
+          "bin_policy_eligible": false,
+          "target_region_policy_eligible": false,
+          "target_region_clear": true,
+          "geometry_feasible": false,
+          "gripper_feasible": false,
+          "workspace_reachable": false,
+          "workspace_recovery_feasible": false,
+          "object_observation_ready": false,
+          "target_observation_ready": false,
+          "task_completed": false,
+          "reward": 0.0,
+          "recoverable_environment": false,
+          "confidence": 0.0
+        }
+      ],
+      "summary": {
+        "state": {
+          "bin_policy_eligible": false,
+          "confidence": 0.0,
+          "container_entry_clear": false,
+          "container_rim_z_robot_base": 0.0,
+          "geometry_feasible": false,
+          "gripper_closed": false,
+          "gripper_contact": false,
+          "gripper_feasible": false,
+          "gripper_open": true,
+          "measurement_fresh": false,
+          "object_at_target": false,
+          "object_inside_container": false,
+          "object_inside_target_region": false,
+          "object_lifted": false,
+          "object_observation_ready": false,
+          "object_stable": false,
+          "recoverable_environment": false,
+          "reward": 0.0,
+          "scenario_id": "region_cuboid_holdout_301",
+          "state_provenance": {
+            "completion": "fail_closed",
+            "gripper": "robot_proprioception",
+            "object_pose": "sam3_rgbd_unavailable",
+            "target_region": "sam3_rgbd"
+          },
+          "target_geometry_type": "planar_region",
+          "target_grasped": false,
+          "target_object_center_robot_base": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "target_observation_ready": false,
+          "target_region_center_robot_base": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "target_region_clear": true,
+          "target_region_extent_robot_base": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "target_region_policy_eligible": false,
+          "target_region_quaternion_wxyz": [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "task_completed": false,
+          "uses_simulator_truth": false,
+          "workspace_reachable": false,
+          "workspace_recovery_feasible": false,
+          "world_state_source": "camera_rgbd",
+          "wrong_object_grasped": false
+        },
+        "confidence": 1.0,
+        "stable": true,
+        "unstable_signals": [],
+        "sample_count": 3
+      },
+      "recovery_stage": "ACQUIRE_GRASP",
+      "recovery_directive": {
+        "action": "retry",
+        "repeated_failures": 1,
+        "progress_detected": false,
+        "reason": "same failure may be retried within the configured budget"
+      }
+    }
+  ],
+  "last_error": null
+}

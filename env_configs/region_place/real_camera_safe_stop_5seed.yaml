@@ -1,0 +1,86 @@
+env:
+  _target_: capx.envs.tasks.franka.franka_region_place.FrankaRegionPlaceCodeEnv
+  cfg:
+    _target_: capx.envs.tasks.base.CodeExecEnvConfig
+    low_level: franka_robosuite_bin_place_low_level
+    low_level_kwargs:
+      cube_half_sizes: 0.02,0.02,0.02
+      max_steps: 800
+      scenario_sweep: true
+      target_mode: region
+      world_state_source: camera_rgbd
+      camera_failure_mode: ${oc.env:REGION_PLACE_CAMERA_FAILURE_MODE,''}
+    privileged: false
+    enable_render: true
+    apis: [FrankaControlApi]
+    multi_turn_prompt: ""
+
+api_servers:
+  - _target_: capx.serving.launch_sam3_server.main
+    device: cuda
+    port: 8114
+    host: 127.0.0.1
+    checkpoint_path: ${oc.env:SAM3_CHECKPOINT,./checkpoints/sam3.pt}
+  - _target_: capx.serving.launch_pyroki_server.main
+    port: 8116
+    host: 127.0.0.1
+    robot: panda_description
+    target_link: panda_hand
+
+record_video: true
+use_visual_feedback: true
+save_multiturn_prompts: true
+trials: 405
+num_workers: 1
+max_trial_retries: 1
+trial_timeout_seconds: 300
+output_dir: ${oc.env:REGION_PLACE_OUTPUT_DIR}
+
+world_state_recorder:
+  enabled: true
+  record_every_n_sim_steps: 5
+  record_rgb: false
+  record_depth: false
+  compress_arrays: true
+
+execution_guard:
+  enabled: true
+  reject_empty_code: true
+  max_robot_api_calls_per_block: 4
+  max_expensive_loop_iterations: 0
+  finish_requires_task_completed: true
+  max_decision_reprompts: 0
+
+text_world_state_feedback:
+  enabled: true
+  window_size: 3
+  min_stable_fraction: 0.6667
+  numeric_abs_tolerance: 0.015
+  numeric_rel_tolerance: 0.05
+  include_entities: false
+  fail_open: false
+  action_aligned_window: true
+  wait_for_stability: true
+  stability_wait_steps: 5
+  sample_sim_steps: 3
+
+hybrid_recovery:
+  enabled: true
+  policy_first: true
+  max_model_fallbacks_per_exception: 0
+  max_model_fallbacks_total: 0
+  policy_preconditions:
+    object_observation_ready: true
+    target_observation_ready: true
+    workspace_reachable: true
+    target_region_policy_eligible: true
+    target_region_clear: true
+  task_graph: env_configs/region_place/offline_task_graph.yaml
+  recovery_library: env_configs/region_place/candidate_structural_recovery_library.yaml
+  stage_actions: [stage_001, stage_002]
+
+metadata:
+  status: real_camera_safe_stop_validation
+  task_family: region_place
+  seeds: [401, 402, 403, 404, 405]
+  expected_model_requests: 0

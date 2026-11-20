@@ -1,0 +1,20 @@
+metadata:
+  status: promoted_formal
+  task_family: region_place
+  candidate: TIGHT_CLEARANCE_PLACE
+  promotion_threshold: 8/10
+  smoke_result: 5/5
+  directed_recovery_result: 3/3
+  holdout_result: 8/10
+  holdout_recovery_result: 5/6
+  promoted_on: 2026-09-27
+  model_requests: 0
+recovery_library:
+  OUTSIDE_TARGET_REGION:
+    - candidate_tight_clearance_regrasp
+  TIGHT_CLEARANCE_REGRASP_FAILED:
+    - recover_budget_safe_stop
+  TIGHT_CLEARANCE_PLACE_FAILED:
+    - recover_budget_safe_stop
+  RECOVERY_BUDGET_LOW:
+    - recover_budget_safe_stop

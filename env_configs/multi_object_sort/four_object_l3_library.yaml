@@ -1,0 +1,11 @@
+metadata:
+  status: formal
+  task_family: multi_object_sort
+  candidate: four_role_sequential_finish_v1
+  validation: {smoke: 5/5, unseen: 9/10, promoted_at: 2026-10-09}
+
+recovery_library:
+  FOUR_OBJECT_SORT_INCOMPLETE: [candidate_grasp_primary]
+  GRASP_MISS: [candidate_grasp_primary]
+  PLACE_FAILED: [candidate_grasp_primary]
+  RECOVERY_BUDGET_LOW: [recover_budget_safe_stop]

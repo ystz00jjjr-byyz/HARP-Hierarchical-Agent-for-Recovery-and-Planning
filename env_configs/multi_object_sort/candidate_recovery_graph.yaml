@@ -1,0 +1,410 @@
+metadata:
+  status: formal
+  promoted_at: 2026-10-03
+  task_family: multi_object_sort
+  max_attempts_per_action: 1
+  promotion_gate:
+    seeds: [21, 22, 23, 24, 25, 26, 27, 28, 29, 30]
+    minimum_successes: 8
+    role_binding_error: {successes: 9, trials: 10, route_hits: 10, safe_stops: 1}
+    grasp_miss: {successes: 10, trials: 10, route_hits: 10, safe_stops: 0}
+    place_failed: {successes: 9, trials: 10, route_hits: 10, safe_stops: 1}
+    model_requests: 0
+    videos: 30
+    workspace_edge_grasp_miss:
+      seeds: [61, 62, 63, 64, 65, 66, 67, 68, 69, 70]
+      successes: 10
+      trials: 10
+      full_chain_successes: 8
+      model_requests: 0
+      average_elapsed_seconds: 8.19
+    strict_double_release_stress:
+      seeds: [71, 72, 73, 74, 75]
+      actual_double_injections: 5
+      successes: 2
+      safe_stops: 3
+      model_requests: 0
+      average_elapsed_seconds: 6.88
+    second_release_candidate_smoke:
+      seeds: [71, 72, 73, 74, 75]
+      actual_double_injections: 5
+      successes: 5
+      second_release_route_hits: 3
+      safe_stops: 0
+      model_requests: 0
+      total_tokens: 0
+      average_elapsed_seconds: 8.08
+      status: candidate
+      promotion_requires: 8/10 unseen multi-pose seeds
+    second_release_formal_promotion:
+      seeds: [76, 77, 78, 79, 80, 81, 82, 83, 84, 85]
+      actual_double_injections: 10
+      successes: 8
+      second_release_route_hits: 3
+      safe_stops: 2
+      model_requests: 0
+      total_tokens: 0
+      average_elapsed_seconds: 7.18
+      promoted_on: 2026-10-04
+
+initial: [stage_001]
+
+actions:
+  - id: stage_001
+    primitive: multi_object_sort_nominal
+    code: "pass"
+    success_conditions:
+      task_completed: true
+    failure_routes:
+      POSTCONDITION_FAILED: SORT_RECOVERY_REQUIRED
+      SANDBOX_ERROR: SORT_RECOVERY_REQUIRED
+
+  - id: candidate_role_rebind
+    primitive: reobserve_rebind_and_stage_primary
+    code: |
+      import numpy as np
+
+      home_pose()
+      open_gripper()
+      rebind_roles()
+      staged_primary_pos, _, staged_primary_extent = get_object_pose(
+          "primary", return_bbox_extent=True
+      )
+      staged_primary_grasp, staged_primary_quat = sample_grasp_pose("primary")
+      staged_primary_clearance = max(
+          0.08, 2.0 * float(staged_primary_extent[2])
+      )
+      goto_pose(
+          staged_primary_grasp,
+          staged_primary_quat,
+          z_approach=staged_primary_clearance,
+      )
+      close_gripper()
+      goto_pose(
+          staged_primary_grasp + np.array([0.0, 0.0, 0.15]),
+          staged_primary_quat,
+      )
+      staged_primary_target, _, _ = get_target_region("target_primary")
+      staged_primary_place = (
+          staged_primary_target
+          + np.array([-0.24, 0.0, 0.0])
+          + (staged_primary_grasp - staged_primary_pos)
+      )
+      goto_pose(
+          staged_primary_place
+          + np.array([0.0, 0.0, staged_primary_clearance]),
+          staged_primary_quat,
+      )
+      goto_pose(staged_primary_place, staged_primary_quat)
+      open_gripper()
+      goto_pose(
+          staged_primary_place
+          + np.array([0.0, 0.0, staged_primary_clearance]),
+          staged_primary_quat,
+      )
+      home_pose()
+    success_conditions:
+      wrong_role_binding: false
+      object_observation_ready: true
+      target_observation_ready: true
+    next: candidate_role_place_secondary
+    metadata:
+      status: formal
+      handles_exception: ROLE_BINDING_ERROR
+      observation_refresh: true
+      interrupt_on_failure: true
+      max_attempts: 1
+      failure_next_action: recover_budget_safe_stop
+      precondition_failure_next_action: recover_budget_safe_stop
+
+  - id: candidate_role_place_secondary
+    primitive: replace_secondary_after_role_rebind
+    code: |
+      import numpy as np
+
+      secondary_pos, _, secondary_extent = get_object_pose(
+          "secondary", return_bbox_extent=True
+      )
+      secondary_grasp, secondary_quat = sample_grasp_pose("secondary")
+      secondary_clearance = max(0.08, 2.0 * float(secondary_extent[2]))
+      goto_pose(secondary_grasp, secondary_quat, z_approach=secondary_clearance)
+      close_gripper()
+      goto_pose(secondary_grasp + np.array([0.0, 0.0, 0.15]), secondary_quat)
+      secondary_target, _, _ = get_target_region("target_secondary")
+      secondary_place = secondary_target + (secondary_grasp - secondary_pos)
+      goto_pose(secondary_place + np.array([0.0, 0.0, secondary_clearance]), secondary_quat)
+      goto_pose(secondary_place, secondary_quat)
+      open_gripper()
+      goto_pose(secondary_place + np.array([0.0, 0.0, secondary_clearance]), secondary_quat)
+      home_pose()
+    success_conditions:
+      objects_at_targets.secondary: true
+      wrong_role_binding: false
+      object_stable: true
+    next: candidate_role_place_primary
+    metadata:
+      status: formal
+      handles_exception: ROLE_BINDING_ERROR
+      interrupt_on_failure: true
+      max_attempts: 1
+      failure_next_action: recover_budget_safe_stop
+      precondition_failure_next_action: recover_budget_safe_stop
+
+  - id: candidate_role_place_primary
+    primitive: replace_primary_after_role_rebind
+    code: |
+      import numpy as np
+
+      primary_pos, _, primary_extent = get_object_pose(
+          "primary", return_bbox_extent=True
+      )
+      primary_grasp, primary_quat = sample_grasp_pose("primary")
+      primary_clearance = max(0.08, 2.0 * float(primary_extent[2]))
+      goto_pose(primary_grasp, primary_quat, z_approach=primary_clearance)
+      close_gripper()
+      goto_pose(primary_grasp + np.array([0.0, 0.0, 0.15]), primary_quat)
+      primary_target, _, _ = get_target_region("target_primary")
+      primary_place = primary_target + (primary_grasp - primary_pos)
+      goto_pose(primary_place + np.array([0.0, 0.0, primary_clearance]), primary_quat)
+      goto_pose(primary_place, primary_quat)
+      open_gripper()
+      goto_pose(primary_place + np.array([0.0, 0.0, primary_clearance]), primary_quat)
+      home_pose()
+    success_conditions:
+      task_completed: true
+      gripper_open: true
+      object_stable: true
+    metadata:
+      status: formal
+      handles_exception: ROLE_BINDING_ERROR
+      interrupt_on_failure: true
+      max_attempts: 1
+      failure_next_action: recover_budget_safe_stop
+      precondition_failure_next_action: recover_budget_safe_stop
+
+  - id: candidate_workspace_reachability_gate
+    primitive: workspace_reachability_gate
+    code: "pass"
+    preconditions:
+      object_observation_ready: true
+      object_stable: true
+      workspace_edge_recovery_feasible: true
+    success_conditions:
+      object_observation_ready: true
+      workspace_edge_recovery_feasible: true
+    next: candidate_controlled_workspace_move
+    metadata:
+      status: formal
+      handles_exception: WORKSPACE_EDGE_GRASP_MISS,GRASP_MISS,PLACE_FAILED
+      interrupt_on_failure: true
+      max_attempts: 1
+      failure_next_action: recover_budget_safe_stop
+      precondition_failure_next_action: recover_budget_safe_stop
+
+  - id: candidate_controlled_workspace_move
+    primitive: controlled_move_primary_into_workspace
+    code: |
+      import numpy as np
+
+      home_pose()
+      open_gripper()
+      edge_primary_pos, _, edge_primary_extent = get_object_pose(
+          "primary", return_bbox_extent=True
+      )
+      if edge_primary_pos[0] < 0.44 or edge_primary_pos[0] > 0.74:
+          edge_depth = float(np.clip(
+              0.30 * edge_primary_extent[2], 0.008, 0.012
+          ))
+          edge_grasp = edge_primary_pos - np.array([0.0, 0.0, edge_depth])
+          edge_quat = np.array([0.0, 0.70710678, 0.70710678, 0.0])
+          edge_clearance = max(0.08, 2.0 * float(edge_primary_extent[2]))
+          edge_safe_x = 0.50 if edge_primary_pos[0] < 0.44 else 0.56
+          goto_pose(edge_grasp, edge_quat, z_approach=edge_clearance)
+          close_gripper()
+          edge_lifted = edge_grasp + np.array([0.0, 0.0, 0.035])
+          goto_pose(edge_lifted, edge_quat)
+          edge_moved = edge_lifted.copy()
+          edge_moved[0] = edge_safe_x
+          goto_pose(edge_moved, edge_quat)
+          edge_release = edge_moved - np.array([0.0, 0.0, 0.035])
+          goto_pose(edge_release, edge_quat)
+          open_gripper()
+          goto_pose(edge_moved, edge_quat)
+      home_pose()
+    success_conditions:
+      object_inside_regrasp_workspace: true
+      gripper_open: true
+      object_stable: true
+    next: candidate_workspace_reobserve
+    metadata:
+      status: formal
+      handles_exception: WORKSPACE_EDGE_GRASP_MISS,GRASP_MISS,PLACE_FAILED
+      interrupt_on_failure: true
+      max_attempts: 1
+      failure_next_action: candidate_second_release_reobserve
+      precondition_failure_next_action: recover_budget_safe_stop
+
+  - id: candidate_second_release_reobserve
+    primitive: reobserve_after_second_release_displacement
+    code: |
+      home_pose()
+      open_gripper()
+      get_object_pose("primary", return_bbox_extent=True)
+      get_object_pose("secondary", return_bbox_extent=True)
+    success_conditions:
+      object_observation_ready: true
+      measurement_fresh: true
+      workspace_edge_recovery_required: true
+      workspace_edge_recovery_feasible: true
+      object_stable: true
+    next: candidate_second_release_displacement
+    metadata:
+      status: formal
+      promoted_on: 2026-10-04
+      validated_unseen_seeds: 10
+      validated_successes: 8
+      handles_exception: SECOND_RELEASE_DISPLACEMENT
+      observation_refresh: true
+      interrupt_on_failure: true
+      max_attempts: 1
+      failure_next_action: recover_budget_safe_stop
+      precondition_failure_next_action: recover_budget_safe_stop
+
+  - id: candidate_second_release_displacement
+    primitive: reverse_controlled_move_after_second_release
+    code: |
+      import numpy as np
+
+      second_pos, _, second_extent = get_object_pose(
+          "primary", return_bbox_extent=True
+      )
+      second_depth = float(np.clip(0.20 * second_extent[2], 0.004, 0.008))
+      second_grasp = second_pos - np.array([0.0, 0.0, second_depth])
+      second_quat = np.array([0.0, 0.70710678, 0.70710678, 0.0])
+      second_clearance = max(0.08, 2.0 * float(second_extent[2]))
+      second_safe_x = 0.58 if second_pos[0] < 0.44 else 0.50
+      goto_pose(second_grasp, second_quat, z_approach=second_clearance)
+      close_gripper()
+      second_lifted = second_grasp + np.array([0.0, 0.0, 0.035])
+      goto_pose(second_lifted, second_quat)
+      second_moved = second_lifted.copy()
+      second_moved[0] = second_safe_x
+      goto_pose(second_moved, second_quat)
+      second_release = second_moved - np.array([0.0, 0.0, 0.035])
+      goto_pose(second_release, second_quat)
+      open_gripper()
+      goto_pose(second_moved, second_quat)
+      home_pose()
+    preconditions:
+      workspace_edge_recovery_required: true
+      workspace_edge_recovery_feasible: true
+      object_observation_ready: true
+    success_conditions:
+      object_inside_regrasp_workspace: true
+      gripper_open: true
+      object_stable: true
+    next: candidate_workspace_reobserve
+    metadata:
+      status: formal
+      promoted_on: 2026-10-04
+      validated_unseen_seeds: 10
+      validated_successes: 8
+      handles_exception: SECOND_RELEASE_DISPLACEMENT
+      interrupt_on_failure: true
+      max_attempts: 1
+      failure_next_action: recover_budget_safe_stop
+      precondition_failure_next_action: recover_budget_safe_stop
+
+  - id: candidate_workspace_reobserve
+    primitive: reobserve_primary_after_workspace_move
+    code: |
+      home_pose()
+      open_gripper()
+      get_object_pose("primary", return_bbox_extent=True)
+      get_object_pose("secondary", return_bbox_extent=True)
+    success_conditions:
+      object_observation_ready: true
+      measurement_fresh: true
+      object_inside_regrasp_workspace: true
+      object_stable: true
+    next: candidate_primary_regrasp
+    metadata:
+      status: formal
+      handles_exception: WORKSPACE_EDGE_GRASP_MISS,GRASP_MISS,PLACE_FAILED
+      observation_refresh: true
+      interrupt_on_failure: true
+      max_attempts: 1
+      failure_next_action: recover_budget_safe_stop
+      precondition_failure_next_action: recover_budget_safe_stop
+
+  - id: candidate_primary_regrasp
+    primitive: regrasp_primary_from_rgbd
+    code: |
+      import numpy as np
+
+      home_pose()
+      open_gripper()
+      recovery_primary_pos, _, recovery_primary_extent = get_object_pose(
+          "primary", return_bbox_extent=True
+      )
+      recovery_grasp, recovery_quat = sample_grasp_pose("primary")
+      recovery_clearance = max(0.08, 2.0 * float(recovery_primary_extent[2]))
+      goto_pose(recovery_grasp, recovery_quat, z_approach=recovery_clearance)
+      close_gripper()
+      goto_pose(recovery_grasp + np.array([0.0, 0.0, 0.15]), recovery_quat)
+    success_conditions:
+      active_grasp_role: primary
+      target_grasped: true
+      object_lifted: true
+      wrong_object_grasped: false
+    next: candidate_primary_replace
+    metadata:
+      status: formal
+      handles_exception: WORKSPACE_EDGE_GRASP_MISS,GRASP_MISS,PLACE_FAILED
+      interrupt_on_failure: true
+      max_attempts: 1
+      failure_next_action: recover_budget_safe_stop
+      precondition_failure_next_action: recover_budget_safe_stop
+
+  - id: candidate_primary_replace
+    primitive: replace_primary_in_target_region
+    code: |
+      import numpy as np
+
+      recovery_target, _, _ = get_target_region("target_primary")
+      recovery_place = recovery_target + (recovery_grasp - recovery_primary_pos)
+      goto_pose(
+          recovery_place + np.array([0.0, 0.0, recovery_clearance]),
+          recovery_quat,
+      )
+      goto_pose(recovery_place, recovery_quat)
+      open_gripper()
+      goto_pose(
+          recovery_place + np.array([0.0, 0.0, recovery_clearance]),
+          recovery_quat,
+      )
+      home_pose()
+    success_conditions:
+      task_completed: true
+      objects_at_targets.primary: true
+      gripper_open: true
+      object_stable: true
+    metadata:
+      status: formal
+      handles_exception: WORKSPACE_EDGE_GRASP_MISS,GRASP_MISS,PLACE_FAILED
+      interrupt_on_failure: true
+      max_attempts: 1
+      failure_next_action: recover_budget_safe_stop
+      precondition_failure_next_action: recover_budget_safe_stop
+
+  - id: recover_budget_safe_stop
+    primitive: recover_budget_safe_stop
+    code: |
+      home_pose()
+      open_gripper()
+    success_conditions:
+      gripper_open: true
+    metadata:
+      status: formal
+      terminal: safe_stop
+      max_attempts: 1

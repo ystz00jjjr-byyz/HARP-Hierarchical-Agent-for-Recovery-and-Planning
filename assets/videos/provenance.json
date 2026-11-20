@@ -1,0 +1,20 @@
+[
+  {
+    "file": "known-policy-recovery.mp4",
+    "source": "outputs/bin_place_known_ab_v2_20260921/videos/unstable_release/hybrid/trial_06/video_combined.mp4",
+    "mode": "saved-code replay; unstable_release / hybrid / seed 6",
+    "source_sha256": "7e0f7c8d50e8d4b837e4dcf0463bd9f1142105e7ede950e43af99fd78cc394d5"
+  },
+  {
+    "file": "model-driven-baseline.mp4",
+    "source": "outputs/bin_place_known_ab_v2_20260921/videos/unstable_release/native/trial_06/video_combined.mp4",
+    "mode": "saved-code replay; unstable_release / native / seed 6",
+    "source_sha256": "2f1ea6da1d6b5c3d5c3550f16240f0fdfbea7d8d61d2268ef16b2670a7f5f563"
+  },
+  {
+    "file": "l4-structured-plan.mp4",
+    "source": "outputs/structural_unknown_ab/astra_subscription_1seed/rerun/runs/gpt-6-astra/l4/trial_301_sandboxrc_0_reward_1.000_taskcompleted_1/video_combined.mp4",
+    "mode": "recorded execution; region_place / L4 / seed 301",
+    "source_sha256": "6c29aa5c6bcef447792a24b04763d6e567e4f2d2cef0deeb4084944179c688d8"
+  }
+]

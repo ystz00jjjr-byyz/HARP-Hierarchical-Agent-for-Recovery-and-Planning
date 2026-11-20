@@ -1,0 +1,16 @@
+metadata:
+  status: candidate
+  task_family: multi_object_sort
+  candidate_exception: WORKSPACE_EDGE_GRASP_MISS
+
+recovery_library:
+  GRASP_MISS:
+    - candidate_workspace_reachability_gate
+  PLACE_FAILED:
+    - candidate_workspace_reachability_gate
+  SORT_RECOVERY_REQUIRED:
+    - candidate_workspace_reachability_gate
+  WORKSPACE_EDGE_GRASP_MISS:
+    - candidate_workspace_reachability_gate
+  RECOVERY_BUDGET_LOW:
+    - recover_budget_safe_stop

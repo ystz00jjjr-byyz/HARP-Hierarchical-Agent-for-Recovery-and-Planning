@@ -1,0 +1,26 @@
+metadata:
+  status: formal
+  promoted_at: 2026-10-03
+  task_family: multi_object_sort
+  validation:
+    seeds: [21, 22, 23, 24, 25, 26, 27, 28, 29, 30]
+    required_successes: 8
+    role_binding_error: {successes: 9, trials: 10, route_hits: 10}
+    grasp_miss: {successes: 10, trials: 10, route_hits: 10}
+    place_failed: {successes: 9, trials: 10, route_hits: 10}
+    model_requests: 0
+    safe_stops: 2
+
+recovery_library:
+  ROLE_BINDING_ERROR:
+    - candidate_role_rebind
+  GRASP_MISS:
+    - candidate_workspace_reachability_gate
+  PLACE_FAILED:
+    - candidate_workspace_reachability_gate
+  SORT_RECOVERY_REQUIRED:
+    - candidate_workspace_reachability_gate
+  WORKSPACE_EDGE_GRASP_MISS:
+    - candidate_workspace_reachability_gate
+  RECOVERY_BUDGET_LOW:
+    - recover_budget_safe_stop

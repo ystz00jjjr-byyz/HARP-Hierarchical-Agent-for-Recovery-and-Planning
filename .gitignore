@@ -1,0 +1,17 @@
+__pycache__/
+*.py[cod]
+.venv*/
+.env
+.env.*
+!.env.example
+*.key
+.openrouterkey
+.nvinferencekeys
+.webui_secret_key
+.pytest_cache/
+*.egg-info/
+outputs/
+checkpoints/
+node_modules/
+!results/l4_smoke_seed301/checkpoints/
+!results/l4_smoke_seed301/checkpoints/*.npz

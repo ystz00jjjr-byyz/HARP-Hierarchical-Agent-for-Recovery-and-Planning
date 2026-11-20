@@ -1,0 +1,37 @@
+metadata:
+  status: formal
+  task_family: region_place
+  purpose: formal_ab_double_release_improvement
+  validation:
+    formal_promotion: true
+    required_successes: 8
+    required_trials: 10
+    unseen_successes: 9
+    unseen_trials: 10
+    unseen_seeds: [37, 38, 39, 40, 41, 42, 43, 44, 45, 46]
+    structured_l3_requests: 7
+    max_structured_l3_requests_per_trial: 1
+    arbitrary_recovery_code_executed: 0
+    failed_seed: 40
+    failed_seed_terminal_action: model_fallback_budget_safe_stop
+    evidence: outputs/l3_structured_unseen10_20261002/UNSEEN_10SEED_REPORT.md
+recovery_library:
+  GRASP_MISS:
+    - recover_target_region_regrasp
+  OUTSIDE_TARGET_REGION:
+    - recover_target_region_regrasp
+    - recover_target_region_replace_then_structural
+  WORKSPACE_EDGE_GRASP_MISS:
+    - recover_workspace_edge_reobserve
+  WORKSPACE_EDGE_MOVE_RETRY_REQUIRED:
+    - recover_workspace_edge_move_retry
+  WORKSPACE_EDGE_RECOVERY_FAILED:
+    - recover_budget_safe_stop
+  GRASP_RECOVERY_RETRY_REQUIRED:
+    - recover_target_region_regrasp_retry
+  STRUCTURALLY_DISTINCT_REGRASP_REQUIRED:
+    - candidate_structurally_distinct_regrasp_replace
+  RECOVERY_BUDGET_LOW:
+    - recover_budget_safe_stop
+  INFEASIBLE_TASK:
+    - recover_budget_safe_stop

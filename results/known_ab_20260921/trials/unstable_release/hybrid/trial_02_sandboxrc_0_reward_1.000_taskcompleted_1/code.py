@@ -1,0 +1,134 @@
+# Code block 0
+import json
+_offline_params = json.loads('{"primary_pose": [0.4961572288423093, -0.22503229164237828, -0.08303964604807756, -0.4746711788591976, 0.0, 0.0, 0.880163207570289], "primary_extent": [0.04, 0.04, 0.04]}')
+
+import numpy as np
+
+primary_pose = np.asarray(_offline_params["primary_pose"], dtype=float)
+primary_extent = np.asarray(_offline_params["primary_extent"], dtype=float)
+primary_pos = primary_pose[:3]
+primary_quat = primary_pose[3:7]
+w, x, y, z = primary_quat / np.linalg.norm(primary_quat)
+yaw = np.arctan2(2.0 * (w * z + x * y), 1.0 - 2.0 * (y * y + z * z))
+primary_grasp_pos = primary_pos + np.array([
+    0.0, 0.0, max(0.004, 0.175 * float(primary_extent[2]))
+])
+primary_grasp_quat = np.array([
+    0.0, -np.sin(0.5 * yaw), np.cos(0.5 * yaw), 0.0
+])
+approach = max(0.08, 2.0 * float(primary_extent[2]))
+lift = max(0.15, 3.0 * float(primary_extent[2]))
+goto_pose(primary_grasp_pos, primary_grasp_quat, z_approach=approach)
+close_gripper()
+goto_pose(primary_grasp_pos + np.array([0.0, 0.0, lift]), primary_grasp_quat)
+
+# Code block 1
+if "target_grasp_pos" in globals():
+    primary_grasp_pos = target_grasp_pos
+    primary_grasp_quat = target_grasp_quat
+    primary_pos = current_pos
+target_center, target_extent, rim_z = get_target_region("target")
+target_gripper = target_center + (primary_grasp_pos - primary_pos)
+entry = target_gripper.copy()
+entry[2] = max(
+    entry[2] + approach,
+    rim_z + 0.5 * float(primary_extent[2]) + 0.04,
+)
+goto_pose(entry, primary_grasp_quat)
+goto_pose(target_gripper, primary_grasp_quat)
+open_gripper()
+goto_pose(entry, primary_grasp_quat)
+open_gripper()
+
+# Code block 2
+import json
+_offline_params = json.loads('{"primary_pose": [0.5510683187509615, 0.2717402127878966, -0.08210775542021687, -0.25586278649737154, -2.278461479547804e-18, 1.0739699331978287e-17, 0.9667131086758881], "primary_extent": [0.04, 0.04, 0.04]}')
+
+import numpy as np
+
+primary_pose = np.asarray(_offline_params["primary_pose"], dtype=float)
+primary_extent = np.asarray(_offline_params["primary_extent"], dtype=float)
+current_pos = primary_pose[:3]
+current_quat = primary_pose[3:7]
+w, x, y, z = current_quat / np.linalg.norm(current_quat)
+yaw = np.arctan2(2.0 * (w * z + x * y), 1.0 - 2.0 * (y * y + z * z))
+grasp_pos = current_pos + np.array([
+    0.0, 0.0, max(0.004, 0.175 * float(primary_extent[2]))
+])
+grasp_quat = np.array([
+    0.0, -np.sin(0.5 * yaw), np.cos(0.5 * yaw), 0.0
+])
+approach = max(0.08, 2.0 * float(primary_extent[2]))
+lift = max(0.15, 3.0 * float(primary_extent[2]))
+open_gripper()
+goto_pose(grasp_pos, grasp_quat, z_approach=approach)
+close_gripper()
+goto_pose(grasp_pos + np.array([0.0, 0.0, lift]), grasp_quat)
+
+# Code block 3
+import numpy as np
+current_pos, current_quat, primary_extent = get_object_pose("primary", return_bbox_extent=True)
+w, x, y, z = current_quat / np.linalg.norm(current_quat)
+yaw = np.arctan2(2.0 * (w * z + x * y), 1.0 - 2.0 * (y * y + z * z))
+yaw += 0.5 * np.pi
+grasp_pos = current_pos + np.array([0.0, 0.0, max(0.004, 0.175 * float(primary_extent[2]))])
+grasp_pos[1] -= np.copysign(0.01, current_pos[1])
+grasp_quat = np.array([0.0, -np.sin(0.5 * yaw), np.cos(0.5 * yaw), 0.0])
+approach = max(0.1, 2.0 * float(primary_extent[2]))
+lift = max(0.15, 3.0 * float(primary_extent[2]))
+home_pose()
+open_gripper()
+goto_pose(grasp_pos, grasp_quat, z_approach=approach)
+close_gripper()
+goto_pose(grasp_pos + np.array([0.0, 0.0, lift]), grasp_quat)
+
+# Code block 4
+home_pose()
+open_gripper()
+observed_pos, observed_quat, observed_extent = get_object_pose(
+    "primary", return_bbox_extent=True
+)
+
+# Code block 5
+import numpy as np
+
+primary_pose = np.asarray(_offline_params["primary_pose"], dtype=float)
+primary_extent = np.asarray(_offline_params["primary_extent"], dtype=float)
+current_pos = primary_pose[:3]
+inward_y = -np.sign(current_pos[1]) if current_pos[1] != 0.0 else 1.0
+push_quat = np.array([0.0, 0.0, 1.0, 0.0])
+tool_z = current_pos[2] + max(0.004, 0.175 * float(primary_extent[2]))
+push_start = current_pos + np.array([
+    0.0,
+    -inward_y * (0.5 * float(primary_extent[1]) + 0.025),
+    tool_z - current_pos[2],
+])
+push_end = current_pos + np.array([0.0, inward_y * 0.07, tool_z - current_pos[2]])
+home_pose()
+close_gripper()
+goto_pose(push_start, push_quat, z_approach=0.08)
+goto_pose(push_end, push_quat)
+home_pose()
+open_gripper()
+
+# Code block 6
+import numpy as np
+
+primary_pose = np.asarray(_offline_params["primary_pose"], dtype=float)
+primary_extent = np.asarray(_offline_params["primary_extent"], dtype=float)
+current_pos = primary_pose[:3]
+current_quat = primary_pose[3:7]
+w, x, y, z = current_quat / np.linalg.norm(current_quat)
+yaw = np.arctan2(2.0 * (w * z + x * y), 1.0 - 2.0 * (y * y + z * z))
+grasp_pos = current_pos + np.array([
+    0.0, 0.0, max(0.004, 0.175 * float(primary_extent[2]))
+])
+grasp_quat = np.array([
+    0.0, -np.sin(0.5 * yaw), np.cos(0.5 * yaw), 0.0
+])
+approach = max(0.08, 2.0 * float(primary_extent[2]))
+lift = max(0.15, 3.0 * float(primary_extent[2]))
+open_gripper()
+goto_pose(grasp_pos, grasp_quat, z_approach=approach)
+close_gripper()
+goto_pose(grasp_pos + np.array([0.0, 0.0, lift]), grasp_quat)

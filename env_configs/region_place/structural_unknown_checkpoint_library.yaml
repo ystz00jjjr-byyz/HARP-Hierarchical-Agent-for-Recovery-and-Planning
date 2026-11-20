@@ -1,0 +1,6 @@
+metadata:
+  status: frozen_experiment
+  task_family: region_place
+recovery_library:
+  RECOVERY_BUDGET_LOW: [recover_budget_safe_stop]
+

@@ -1,0 +1,190 @@
+metadata:
+  status: formal
+  candidate_version: slender_geometry_recovery_v1
+  source_patterns: env_configs/cube_restack/cuboid_slender_failure_candidates.yaml
+  promoted_at: 2026-09-18
+  scope: cuboid_restack
+actions:
+  - id: recover_clear_recovery_radial
+    primitive: move_secondary_radially_away_from_primary
+    parameters:
+      primary_pose: cube_poses_robot_base.primary
+      secondary_pose: cube_poses_robot_base.secondary
+      secondary_extent: cube_extents_robot_base.secondary
+      clearance_threshold: restack_clearance_threshold
+    code: |
+      import numpy as np
+
+      primary_pose = np.asarray(_offline_params["primary_pose"], dtype=float)
+      secondary_pose = np.asarray(_offline_params["secondary_pose"], dtype=float)
+      secondary_extent = np.asarray(_offline_params["secondary_extent"], dtype=float)
+      clearance_threshold = float(_offline_params["clearance_threshold"])
+      separation = secondary_pose[:2] - primary_pose[:2]
+      distance = float(np.linalg.norm(separation))
+      if distance < 1e-6:
+          separation = np.array([0.0, 1.0])
+          distance = 0.0
+      away = separation / max(float(np.linalg.norm(separation)), 1e-6)
+      margin = max(0.03, float(np.min(secondary_extent[:2])))
+      target_distance = max(clearance_threshold + margin, distance + margin)
+      target_center = secondary_pose[:3].copy()
+      target_center[:2] = primary_pose[:2] + away * target_distance
+
+      w, x, y, z = secondary_pose[3:7] / np.linalg.norm(secondary_pose[3:7])
+      yaw = np.arctan2(2.0 * (w * z + x * y), 1.0 - 2.0 * (y * y + z * z))
+      grasp_quat = np.array([0.0, -np.sin(0.5 * yaw), np.cos(0.5 * yaw), 0.0])
+      grasp_offset_z = max(0.004, 0.15 * float(secondary_extent[2]))
+      grasp_pos = secondary_pose[:3] + np.array([0.0, 0.0, grasp_offset_z])
+      grasp_offset = grasp_pos - secondary_pose[:3]
+      approach = max(0.08, 2.0 * float(secondary_extent[2]))
+      target_gripper = target_center + grasp_offset
+
+      home_pose()
+      open_gripper()
+      goto_pose(grasp_pos, grasp_quat, z_approach=approach)
+      close_gripper()
+      goto_pose(grasp_pos + np.array([0.0, 0.0, approach]), grasp_quat)
+      goto_pose(target_gripper + np.array([0.0, 0.0, approach]), grasp_quat)
+      goto_pose(target_gripper, grasp_quat)
+      open_gripper()
+      goto_pose(target_gripper + np.array([0.0, 0.0, approach]), grasp_quat)
+      home_pose()
+    preconditions:
+      object_stable: true
+      recovery_budget_low: false
+    success_conditions:
+      restack_precondition_cleared: true
+      gripper_open: true
+      object_stable: true
+    next: stage_002
+    metadata:
+      status: formal
+      handles_exception: CLEAR_RECOVERY_FAILED
+      direction_rule: current_secondary_minus_primary
+      clearance_margin_rule: max_30mm_or_secondary_short_side
+
+  - id: recover_slender_grasp_pose
+    primitive: grasp_slender_primary_across_short_axis
+    parameters:
+      target_pose: target_pose_robot_base
+      target_extent: target_extent_robot_base
+    code: |
+      import numpy as np
+
+      target_pose = np.asarray(_offline_params["target_pose"], dtype=float)
+      target_extent = np.asarray(_offline_params["target_extent"], dtype=float)
+      horizontal = np.sort(target_extent[:2])
+      if horizontal[1] / horizontal[0] < 2.0 or horizontal[0] > 0.075:
+          raise RuntimeError("slender grasp geometry is not eligible")
+      w, x, y, z = target_pose[3:7] / np.linalg.norm(target_pose[3:7])
+      yaw = np.arctan2(2.0 * (w * z + x * y), 1.0 - 2.0 * (y * y + z * z))
+      target_grasp_quat = np.array([0.0, -np.sin(0.5 * yaw), np.cos(0.5 * yaw), 0.0])
+      target_grasp_pos = target_pose[:3] + np.array([0.0, 0.0, max(0.004, 0.15 * float(target_extent[2]))])
+      approach = max(0.06, 1.5 * float(target_extent[2]))
+      lift = max(0.12, 2.5 * float(target_extent[2]))
+      target_lift_pos = target_grasp_pos + np.array([0.0, 0.0, lift])
+      home_pose()
+      open_gripper()
+      goto_pose(target_grasp_pos, target_grasp_quat, z_approach=approach)
+      close_gripper()
+      goto_pose(target_lift_pos, target_grasp_quat)
+    preconditions:
+      object_stable: true
+      recovery_budget_low: false
+    success_conditions:
+      target_grasped: true
+      object_lifted: true
+      wrong_object_grasped: false
+    next: stage_003_after_recovery
+    metadata:
+      status: formal
+      handles_exception: SLENDER_GRASP_POSE_UNSAFE
+      orientation_rule: top_down_aligned_to_primary_long_axis
+      width_rule: short_side <= 0.075m
+      accept_semantic_stability: true
+
+  - id: recover_slender_place_alignment
+    primitive: regrasp_and_align_slender_primary_to_support
+    parameters:
+      primary_pose: cube_poses_robot_base.primary
+      secondary_pose: cube_poses_robot_base.secondary
+      primary_extent: cube_extents_robot_base.primary
+      secondary_extent: cube_extents_robot_base.secondary
+    code: |
+      import numpy as np
+
+      primary_pose = np.asarray(_offline_params["primary_pose"], dtype=float)
+      secondary_pose = np.asarray(_offline_params["secondary_pose"], dtype=float)
+      primary_extent = np.asarray(_offline_params["primary_extent"], dtype=float)
+      secondary_extent = np.asarray(_offline_params["secondary_extent"], dtype=float)
+      def top_down_yaw(pose):
+          w, x, y, z = pose[3:7] / np.linalg.norm(pose[3:7])
+          yaw = np.arctan2(2.0 * (w * z + x * y), 1.0 - 2.0 * (y * y + z * z))
+          return np.array([0.0, -np.sin(0.5 * yaw), np.cos(0.5 * yaw), 0.0])
+      grasp_quat = top_down_yaw(primary_pose)
+      grasp_pos = primary_pose[:3] + np.array([0.0, 0.0, max(0.004, 0.15 * float(primary_extent[2]))])
+      approach = max(0.08, 2.0 * float(primary_extent[2]))
+      lift = max(0.15, 3.0 * float(primary_extent[2]))
+      placement_margin = min(0.003, 0.05 * float(primary_extent[2]))
+      target_center = secondary_pose[:3] + np.array([0.0, 0.0, 0.5 * float(primary_extent[2] + secondary_extent[2]) + placement_margin])
+      target_gripper = target_center + (grasp_pos - primary_pose[:3])
+      open_gripper()
+      goto_pose(grasp_pos, grasp_quat, z_approach=approach)
+      close_gripper()
+      goto_pose(grasp_pos + np.array([0.0, 0.0, lift]), grasp_quat)
+      goto_pose(target_gripper + np.array([0.0, 0.0, approach]), grasp_quat)
+      goto_pose(target_gripper + np.array([0.0, 0.0, 0.01]), grasp_quat)
+      goto_pose(target_gripper, grasp_quat)
+      open_gripper()
+      home_pose()
+    preconditions:
+      object_stable: true
+      recovery_budget_low: false
+    success_conditions:
+      task_completed: true
+      gripper_open: true
+      object_stable: true
+    failure_routes:
+      OBJECT_UNSTABLE: UNSTABLE_RELEASE
+    metadata:
+      status: formal
+      handles_exception: PLACE_ALIGNMENT_FAILED
+      orientation_rule: preserve_current_primary_grasp_yaw
+      descent_rule: 10mm_pre_release_step
+
+  - id: recover_slender_unstable_release
+    primitive: release_and_observe_slender_stack
+    parameters:
+      distance_to_target: distance_to_target
+    code: |
+      distance_to_target = float(_offline_params["distance_to_target"])
+      open_gripper()
+      if distance_to_target <= 0.02:
+          home_pose()
+    success_conditions:
+      task_completed: true
+      gripper_open: true
+      object_stable: true
+    failure_routes:
+      POSTCONDITION_FAILED: PLACE_ALIGNMENT_FAILED
+    metadata:
+      status: formal
+      handles_exception: UNSTABLE_RELEASE
+      settle_radius_m: 0.02
+
+  - id: recover_budget_safe_stop
+    primitive: safe_release_when_recovery_budget_low
+    parameters:
+      simulator_steps_remaining: simulator_steps_remaining
+    code: |
+      simulator_steps_remaining = int(_offline_params["simulator_steps_remaining"])
+      open_gripper()
+      print(f"Safe stop with {simulator_steps_remaining} simulator steps remaining")
+    preconditions:
+      recovery_budget_low: true
+    success_conditions:
+      gripper_open: true
+    metadata:
+      status: formal
+      handles_exception: RECOVERY_BUDGET_LOW
+      terminal_safe_stop: true

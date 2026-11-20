@@ -1,0 +1,61 @@
+initial:
+  - stage_001
+  - stage_002
+  - stage_003
+
+actions:
+  - id: stage_001
+    primitive: approach
+    code: pass
+    failure_routes:
+      POSTCONDITION_FAILED: APPROACH_FAILED
+
+  - id: stage_002
+    primitive: grasp
+    code: pass
+    failure_routes:
+      POSTCONDITION_FAILED: GRASP_MISS
+      SANDBOX_ERROR: GRASP_MISS
+
+  - id: stage_003
+    primitive: lift
+    code: pass
+    failure_routes:
+      POSTCONDITION_FAILED: LIFT_FAILED
+
+  - id: recover_grasp_miss_broken
+    primitive: validation_failure
+    code: |
+      print("Validation-only failed recovery action")
+    success_conditions:
+      target_grasped: true
+      object_lifted: true
+    metadata:
+      validation_only: true
+
+  - id: recover_grasp_miss_live_plan
+    primitive: grasp_target_from_live_plan
+    parameters:
+      target_extent: target_extent_robot_base
+    code: |
+      import numpy as np
+
+      target_extent = np.asarray(_offline_params["target_extent"], dtype=float)
+      home_pose()
+      target_grasp_pos, target_grasp_quat = sample_grasp_pose("primary")
+      approach_height = max(0.08, 2.0 * float(target_extent[2]))
+      lift_height = max(0.15, 3.0 * float(target_extent[2]))
+      target_lift_pos = target_grasp_pos + np.array([0.0, 0.0, lift_height])
+      open_gripper()
+      goto_pose(target_grasp_pos, target_grasp_quat, z_approach=approach_height)
+      close_gripper()
+      goto_pose(target_lift_pos, target_grasp_quat)
+    success_conditions:
+      target_grasped: true
+      object_lifted: true
+      wrong_object_grasped: false
+    metadata:
+      status: validation_candidate
+      validation_only: true
+      grasp_pose_source: live_grasp_planner
+      geometry_source: current_target_extent

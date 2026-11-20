@@ -1,0 +1,22 @@
+metadata:
+  status: mixed
+  task_family: multi_object_sort
+  candidate: active_role_two_orthogonal_grasps_v1
+  model_requests: 0
+  formal_exceptions: [GRASP_MISS]
+  candidate_exceptions: [ROLE_BINDING_ERROR]
+  promoted_on: 2026-10-09
+
+recovery_library:
+  ROLE_BINDING_ERROR:
+    - candidate_active_role_rebind
+  GRASP_MISS:
+    - candidate_active_role_reobserve
+  PLACE_FAILED:
+    - candidate_workspace_reachability_gate
+  SORT_RECOVERY_REQUIRED:
+    - candidate_workspace_reachability_gate
+  WORKSPACE_EDGE_GRASP_MISS:
+    - candidate_workspace_reachability_gate
+  RECOVERY_BUDGET_LOW:
+    - recover_budget_safe_stop

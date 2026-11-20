@@ -1,0 +1,92 @@
+env:
+  _target_: capx.envs.tasks.franka.franka_multi_object_sort.FrankaMultiObjectSortCodeEnv
+  cfg:
+    _target_: capx.envs.tasks.base.CodeExecEnvConfig
+    low_level: franka_robosuite_multi_object_sort_low_level
+    low_level_kwargs:
+      max_steps: 3200
+      cube_A_half_sizes: '${oc.env:SORT_PRIMARY_HALF_SIZES,"0.015,0.025,0.020"}'
+      cube_B_half_sizes: '${oc.env:SORT_SECONDARY_HALF_SIZES,"0.018,0.028,0.020"}'
+      primary_color: red
+      secondary_color: green
+      object_shape: cuboid
+      world_state_source: camera_rgbd
+      inject_primary_release_failures: ${oc.env:SORT_PLACE_FAILURES,1}
+      primary_release_fault_offset: ${oc.env:SORT_RELEASE_OFFSET,0.10}
+      force_primary_release_faults: false
+      inject_grasp_miss_attempts: ${oc.env:SORT_GRASP_MISSES,0}
+      directed_primary_source_x: ${oc.env:SORT_DIRECTED_PRIMARY_SOURCE_X,null}
+    privileged: false
+    enable_render: true
+    apis: [FrankaMultiObjectSortRgbdApi]
+
+api_servers:
+  - _target_: capx.serving.launch_pyroki_server.main
+    port: 8116
+    host: 127.0.0.1
+    robot: panda_description
+    target_link: panda_hand
+
+use_oracle_code: true
+record_video: true
+use_visual_feedback: false
+save_multiturn_prompts: true
+trials: 1
+num_workers: 1
+max_trial_retries: 1
+trial_timeout_seconds: 1000
+output_dir: ${oc.env:SORT_OUTPUT_DIR,./outputs/multi_object_sort_cuboid_edge_push_candidate}
+
+world_state_recorder:
+  enabled: true
+  record_every_n_sim_steps: 10
+  record_rgb: false
+  record_depth: false
+  compress_arrays: true
+
+execution_guard:
+  enabled: true
+  reject_empty_code: true
+  max_robot_api_calls_per_block: 20
+  max_expensive_loop_iterations: 0
+  finish_requires_task_completed: true
+  max_decision_reprompts: 0
+  stage_expectations:
+    - name: nominal_sort_complete
+      required:
+        task_completed: true
+
+text_world_state_feedback:
+  enabled: true
+  window_size: 3
+  min_stable_fraction: 0.6667
+  numeric_abs_tolerance: 0.015
+  numeric_rel_tolerance: 0.05
+  include_entities: false
+  fail_open: false
+  loop_guard_enabled: true
+  max_same_failure_retries: 1
+  min_progress_delta: 0.01
+  action_aligned_window: true
+  wait_for_stability: true
+  stability_wait_steps: 5
+  sample_sim_steps: 3
+
+hybrid_recovery:
+  enabled: true
+  policy_first: false
+  max_model_fallbacks_per_exception: 0
+  max_model_fallbacks_total: 0
+  task_graph: env_configs/multi_object_sort/cuboid_edge_push_candidate_graph.yaml
+  recovery_library: env_configs/multi_object_sort/cuboid_edge_push_candidate_library.yaml
+  stage_actions: [stage_001]
+
+metadata:
+  status: formal
+  task_family: multi_object_sort
+  candidate: cuboid_ik_collision_gated_edge_push_v1
+  expected_model_requests: 0
+  validation:
+    unseen_seeds: 11-20
+    task_completed: 10/10
+    model_requests: 0

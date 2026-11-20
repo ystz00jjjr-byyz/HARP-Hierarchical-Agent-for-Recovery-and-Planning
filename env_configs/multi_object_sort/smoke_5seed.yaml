@@ -1,0 +1,43 @@
+env:
+  _target_: capx.envs.tasks.franka.franka_multi_object_sort.FrankaMultiObjectSortCodeEnv
+  cfg:
+    _target_: capx.envs.tasks.base.CodeExecEnvConfig
+    low_level: franka_robosuite_multi_object_sort_low_level
+    low_level_kwargs:
+      max_steps: 2600
+      cube_A_half_sizes: 0.02,0.02,0.02
+      cube_B_half_sizes: 0.02,0.02,0.02
+      primary_color: red
+      secondary_color: green
+      object_shape: cube
+    privileged: true
+    enable_render: true
+    apis: [FrankaControlPrivilegedApi]
+
+api_servers:
+  - _target_: capx.serving.launch_pyroki_server.main
+    port: 8116
+    host: 127.0.0.1
+    robot: panda_description
+    target_link: panda_hand
+
+use_oracle_code: true
+record_video: true
+trials: 5
+num_workers: 1
+max_trial_retries: 1
+trial_timeout_seconds: 600
+output_dir: ./outputs/multi_object_sort_smoke_5seed_v2
+
+world_state_recorder:
+  enabled: true
+  record_every_n_sim_steps: 10
+  record_rgb: false
+  record_depth: false
+  compress_arrays: true
+
+metadata:
+  experiment: multi_object_sort_smoke_5seed
+  phase: privileged_mechanics_baseline
+  seeds: [1, 2, 3, 4, 5]
+  acceptance: 4/5

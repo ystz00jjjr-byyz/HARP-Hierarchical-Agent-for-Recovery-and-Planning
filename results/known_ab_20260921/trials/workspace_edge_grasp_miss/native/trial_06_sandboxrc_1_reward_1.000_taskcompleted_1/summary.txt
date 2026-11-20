@@ -1,0 +1,84 @@
+----------------------------------------------------------------------------------------------------
+Generated program:
+# Code block 0
+import numpy as np
+
+# ==============================================================================
+# Stage 1: Grasp and lift the primary object
+# ==============================================================================
+# Query live object pose and bounding box extent
+obj_pos, _, obj_extent = get_object_pose("red block", return_bbox_extent=True)
+
+# Sample a valid grasp pose for the primary object
+grasp_pos, grasp_quat = sample_grasp_pose("red block")
+
+# Open the gripper before approaching
+open_gripper()
+
+# Approach and move to the grasp pose
+goto_pose(grasp_pos, grasp_quat, z_approach=0.1)
+
+# Grasp the object securely
+close_gripper()
+
+# Lift the object safely above the trays
+lift_pos = grasp_pos.copy()
+lift_pos[2] += 0.2
+goto_pose(lift_pos, grasp_quat)
+
+# Code block 1
+# ==============================================================================
+# Stage 2: Enter the bin, release gently, and retreat
+# ==============================================================================
+# Query the live target region geometry
+target_pos, target_extent, _ = get_target_region("target")
+
+# Calculate floor height and gentle placement gripper altitude
+obj_bottom_z = obj_pos[2] - obj_extent[2] / 2.0
+if abs(target_pos[2] - obj_bottom_z) < 0.03:
+    target_floor_z = target_pos[2]
+elif (
+    hasattr(target_extent, "__len__")
+    and len(target_extent) >= 3
+    and target_extent[2] > 0.02
+):
+    target_floor_z = target_pos[2] - target_extent[2] / 2.0
+else:
+    target_floor_z = target_pos[2]
+
+target_gripper_z = target_floor_z + 0.005 + (grasp_pos[2] - obj_bottom_z)
+
+# Move horizontally above the target bin
+above_target = np.array([target_pos[0], target_pos[1], lift_pos[2]])
+goto_pose(above_target, grasp_quat)
+
+# Enter the bin to the gentle release height
+place_pos = np.array([target_pos[0], target_pos[1], target_gripper_z])
+goto_pose(place_pos, grasp_quat)
+
+# Release the primary object gently
+open_gripper()
+
+# Retreat vertically clear of the bin
+retreat_pos = np.array([target_pos[0], target_pos[1], lift_pos[2]])
+goto_pose(retreat_pos, grasp_quat)
+
+
+Environment response:
+  Sandbox failed: 1
+  Stdout: 
+  Stderr: Traceback (most recent call last):
+  File "/home/byyz/桌面/cap-x-main/capx/envs/tasks/base.py", line 179, in _exec_user_code
+    exec(code, self._exec_globals, self._exec_globals)
+  File "<string>", line 7, in <module>
+  File "/home/byyz/桌面/cap-x-main/capx/integrations/franka/control_privileged.py", line 128, in get_object_pose
+    raise ValueError(f"Invalid object name: {object_name}")
+ValueError: Invalid object name: red block
+
+  Reward: 1.0
+  Task Completed: True
+  Terminated: True, Truncated: False
+  Num Regenerations: 0
+  Num Finishes: 0
+  Num Code Blocks: 2
+----------------------------------------------------------------------------------------------------

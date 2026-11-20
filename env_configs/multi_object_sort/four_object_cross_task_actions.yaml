@@ -1,0 +1,140 @@
+metadata:
+  status: candidate_failed_validation
+  task_family: multi_object_sort
+  candidate: four_object_cross_task_composition_v1
+  source_policies:
+    - four_role_sequential_finish_v1
+    - cuboid_ik_collision_gated_edge_push_v1
+  validation:
+    composed_role_binding: {seeds: 91-93, task_completed: 0/3}
+    composed_grasp_miss: {seeds: 94-96, task_completed: 0/3}
+    composed_place_failed: {seeds: 97-99, task_completed: 0/3}
+    lane_preserving_grasp_miss: {seeds: 94-96, task_completed: 0/3}
+    model_requests: 0
+    disposition: do_not_promote
+    observed_gate_failures: [object_path_collision_margin, joint_limit_margin, ik_position_error]
+
+actions:
+  - id: candidate_cross_task_role_rebind
+    primitive: rgbd_role_rebind
+    code: |
+      home_pose()
+      open_gripper()
+      rebind_roles()
+    success_conditions:
+      wrong_role_binding: false
+      object_observation_ready: true
+      target_observation_ready: true
+    next: candidate_grasp_primary
+    metadata:
+      status: candidate
+      handles_exception: ROLE_BINDING_ERROR
+      observation_refresh: true
+      interrupt_on_failure: true
+      max_attempts: 1
+      failure_next_action: recover_budget_safe_stop
+      precondition_failure_next_action: recover_budget_safe_stop
+
+  - id: candidate_cross_task_edge_push_margin_gate
+    primitive: preflight_cuboid_edge_push
+    code: |
+      push_approach, push_contact, push_end, push_retreat, push_quat = (
+          sample_cuboid_edge_push_plan("primary", preserve_lane=True)
+      )
+    preconditions:
+      object_shapes.primary: cuboid
+      object_stable: true
+      workspace_edge_recovery_required: true
+      workspace_edge_recovery_feasible: true
+    success_conditions:
+      ik_collision_margin.safe: true
+    next: candidate_cross_task_controlled_edge_push
+    metadata: &bounded_edge_push
+      status: formal_reuse
+      observation_refresh: true
+      interrupt_on_failure: true
+      max_attempts: 1
+      failure_next_action: recover_budget_safe_stop
+      precondition_failure_next_action: recover_budget_safe_stop
+
+  - id: candidate_cross_task_controlled_edge_push
+    primitive: execute_single_bounded_edge_push
+    code: |
+      close_gripper()
+      execute_cuboid_edge_push()
+      open_gripper()
+      home_pose()
+    preconditions:
+      ik_collision_margin.safe: true
+    success_conditions:
+      object_inside_regrasp_workspace: true
+      gripper_open: true
+      object_stable: true
+    next: candidate_cross_task_post_push_reobserve
+    metadata: *bounded_edge_push
+
+  - id: candidate_cross_task_post_push_reobserve
+    primitive: reobserve_after_edge_push
+    code: |
+      get_object_pose("primary", return_bbox_extent=True)
+      get_object_pose("secondary", return_bbox_extent=True)
+      get_object_pose("tertiary", return_bbox_extent=True)
+      get_object_pose("quaternary", return_bbox_extent=True)
+    success_conditions:
+      object_observation_ready: true
+      measurement_fresh: true
+      object_inside_regrasp_workspace: true
+      object_stable: true
+      cuboid_graspability.short_side_graspable: true
+    next: candidate_cross_task_post_push_regrasp
+    metadata: *bounded_edge_push
+
+  - id: candidate_cross_task_post_push_regrasp
+    primitive: regrasp_pushed_primary
+    code: |
+      import numpy as np
+
+      recovery_grasp, recovery_quat, recovery_extent = (
+          sample_cuboid_grasp_plan("primary", 0)
+      )
+      recovery_clearance = max(0.08, 2.0 * float(recovery_extent[2]))
+      goto_pose(recovery_grasp, recovery_quat, z_approach=recovery_clearance)
+      close_gripper()
+      goto_pose(recovery_grasp + np.array([0.0, 0.0, 0.15]), recovery_quat)
+    preconditions:
+      cuboid_graspability.short_side_graspable: true
+    success_conditions:
+      active_grasp_role: primary
+      target_grasped: true
+      object_lifted: true
+      wrong_object_grasped: false
+    next: candidate_cross_task_post_push_replace
+    metadata: *bounded_edge_push
+
+  - id: candidate_cross_task_post_push_replace
+    primitive: replace_pushed_primary
+    code: |
+      import numpy as np
+
+      recovery_target, _, _ = get_target_region("target_primary")
+      recovery_depth = float(np.clip(0.20 * recovery_extent[2], 0.004, 0.008))
+      recovery_place = recovery_target + np.array([
+          0.0, 0.0, 0.5 * float(recovery_extent[2]) - recovery_depth
+      ])
+      goto_pose(
+          recovery_place + np.array([0.0, 0.0, recovery_clearance]),
+          recovery_quat,
+      )
+      goto_pose(recovery_place, recovery_quat)
+      open_gripper()
+      goto_pose(
+          recovery_place + np.array([0.0, 0.0, recovery_clearance]),
+          recovery_quat,
+      )
+      home_pose()
+    success_conditions:
+      objects_at_targets.primary: true
+      gripper_open: true
+      object_stable: true
+    next: candidate_grasp_primary
+    metadata: *bounded_edge_push

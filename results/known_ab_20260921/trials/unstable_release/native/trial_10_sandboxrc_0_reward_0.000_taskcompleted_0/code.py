@@ -1,0 +1,81 @@
+# Code block 0
+# Stage 1: Grasp and lift the primary object
+# Query live object pose and extent
+obj_pos, _, obj_extent = get_object_pose("red block", return_bbox_extent=True)
+grasp_pos, grasp_quat = sample_grasp_pose("red block")
+
+# Open gripper and approach object
+open_gripper()
+goto_pose(grasp_pos, grasp_quat, z_approach=0.1)
+
+# Grasp and lift object safely
+close_gripper()
+lift_pos = grasp_pos + np.array([0.0, 0.0, 0.20])
+goto_pose(lift_pos, grasp_quat)
+
+# Code block 1
+import numpy as np
+
+# Stage 1: Grasp and lift the primary object
+open_gripper()
+grasp_pos, grasp_quat = sample_grasp_pose('primary')
+goto_pose(grasp_pos, grasp_quat, z_approach=0.1)
+close_gripper()
+
+lift_pos = grasp_pos.copy()
+lift_pos[2] += 0.2
+goto_pose(lift_pos, grasp_quat)
+
+# Code block 2
+import numpy as np
+
+# Query the live object extent and target region
+_, _, obj_extent = get_object_pose("primary", return_bbox_extent=True)
+target_center, target_extent, _ = get_target_region()
+
+# Safe orientation pointing gripper downward
+quat = np.array([0.0, 0.0, 1.0, 0.0])
+
+# Place object gently inside the target bin
+place_z = target_center[2] + (obj_extent[2] / 2.0 if obj_extent is not None else 0.02) + 0.01
+place_pos = np.array([target_center[0], target_center[1], place_z])
+
+# Enter bin, release, and retreat
+goto_pose(place_pos, quat, z_approach=0.15)
+open_gripper()
+
+retreat_pos = place_pos + np.array([0.0, 0.0, 0.15])
+goto_pose(retreat_pos, quat)
+home_pose()
+
+# Code block 3
+open_gripper()
+home_pose()
+
+# Code block 4
+home_pose()
+
+# Code block 5
+home_pose()
+
+# Code block 6
+home_pose()
+
+# Code block 7
+open_gripper()
+home_pose()
+
+# Code block 8
+# The object is already released inside the container but still settling.
+# Move to home pose to let the object settle and satisfy stability criteria.
+home_pose()
+
+# Code block 9
+home_pose()
+
+# Code block 10
+home_pose()
+
+# Code block 11
+open_gripper()
+home_pose()

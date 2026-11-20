@@ -1,0 +1,86 @@
+----------------------------------------------------------------------------------------------------
+Generated program:
+# Code block 0
+# Stage 1: Grasp and lift the primary object
+obj_pos, _, obj_extent = get_object_pose("red block", return_bbox_extent=True)
+target_pos, target_extent, _ = get_target_region("target")
+
+grasp_pos, grasp_quat = sample_grasp_pose("red block")
+
+open_gripper()
+goto_pose(grasp_pos, grasp_quat, z_approach=0.08)
+close_gripper()
+
+lift_pos = grasp_pos.copy()
+lift_pos[2] += 0.20
+goto_pose(lift_pos, grasp_quat)
+
+# Code block 1
+open_gripper()
+grasp_pos, grasp_quat = sample_grasp_pose("primary")
+goto_pose(grasp_pos, grasp_quat, z_approach=0.1)
+close_gripper()
+lift_pos = grasp_pos.copy()
+lift_pos[2] += 0.15
+goto_pose(lift_pos, grasp_quat)
+
+# Code block 2
+import numpy as np
+
+# Query target region geometry
+target_region_pos, target_region_extent, _ = get_target_region("target")
+
+# Gripper down orientation
+down_quat = np.array([0.0, 0.0, 1.0, 0.0])
+
+# 1. Approach safely above the target bin
+above_bin = np.array([target_region_pos[0], target_region_pos[1], 0.12])
+goto_pose(above_bin, down_quat)
+
+# 2. Lower fully inside the bin just above the container floor
+place_pos = np.array(
+    [target_region_pos[0], target_region_pos[1], target_region_pos[2] + 0.03]
+)
+goto_pose(place_pos, down_quat)
+
+# 3. Gently release the object
+open_gripper()
+
+# 4. Retreat straight up out of the bin
+goto_pose(above_bin, down_quat)
+
+# Code block 3
+# Query live object extent and target region
+obj_pos, _, obj_extent = get_object_pose("primary", return_bbox_extent=True)
+target_center, target_extent, _ = get_target_region("target")
+
+# Stage 1: Grasp and lift the primary object
+open_gripper()
+grasp_pos, grasp_quat = sample_grasp_pose("primary")
+goto_pose(grasp_pos, grasp_quat, z_approach=0.1)
+close_gripper()
+
+lift_pos = grasp_pos.copy()
+lift_pos[2] = 0.15
+goto_pose(lift_pos, grasp_quat)
+
+# Code block 4
+import numpy as np
+
+# Query target region geometry
+target_pos, _, _ = get_target_region("target")
+gripper_down_quat = np.array([0.0, 0.0, 1.0, 0.0])
+
+# Safe height above the container rim
+above_container_pos = np.array([target_pos[0], target_pos[1], 0.15])
+goto_pose(above_container_pos, gripper_down_quat)
+
+# Lower primary object gently into the container
+place_pos = np.array([target_pos[0], target_pos[1], target_pos[2] + 0.04])
+goto_pose(place_pos, gripper_down_quat)
+
+# Release object inside the bin
+open_gripper()
+
+# Retreat upwards out of the container
+goto_pose(above_container_pos, gripper_down_quat)

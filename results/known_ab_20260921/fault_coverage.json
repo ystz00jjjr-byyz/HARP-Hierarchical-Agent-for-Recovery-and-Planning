@@ -1,0 +1,77 @@
+{
+  "outside_container": {
+    "hybrid": {
+      "trajectory_count": 10,
+      "injected_trial_count": 10,
+      "injected_trial_ids": [
+        "trial_001",
+        "trial_002",
+        "trial_003",
+        "trial_004",
+        "trial_005",
+        "trial_006",
+        "trial_007",
+        "trial_008",
+        "trial_009",
+        "trial_010"
+      ]
+    },
+    "native": {
+      "trajectory_count": 10,
+      "injected_trial_count": 6,
+      "injected_trial_ids": [
+        "trial_001",
+        "trial_002",
+        "trial_004",
+        "trial_007",
+        "trial_008",
+        "trial_010"
+      ]
+    }
+  },
+  "unstable_release": {
+    "hybrid": {
+      "trajectory_count": 10,
+      "injected_trial_count": 10,
+      "injected_trial_ids": [
+        "trial_001",
+        "trial_002",
+        "trial_003",
+        "trial_004",
+        "trial_005",
+        "trial_006",
+        "trial_007",
+        "trial_008",
+        "trial_009",
+        "trial_010"
+      ]
+    },
+    "native": {
+      "trajectory_count": 10,
+      "injected_trial_count": 7,
+      "injected_trial_ids": [
+        "trial_001",
+        "trial_002",
+        "trial_003",
+        "trial_004",
+        "trial_007",
+        "trial_008",
+        "trial_010"
+      ]
+    }
+  },
+  "workspace_edge_grasp_miss": {
+    "hybrid": {
+      "trajectory_count": 10,
+      "injected_trial_count": 1,
+      "injected_trial_ids": [
+        "trial_001"
+      ]
+    },
+    "native": {
+      "trajectory_count": 10,
+      "injected_trial_count": 0,
+      "injected_trial_ids": []
+    }
+  }
+}

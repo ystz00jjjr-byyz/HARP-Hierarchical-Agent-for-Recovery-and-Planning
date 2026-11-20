@@ -1,0 +1,76 @@
+----------------------------------------------------------------------------------------------------
+Generated program:
+# Code block 0
+import numpy as np
+
+# Query the live object extent and target region
+try:
+    obj_pos, _, obj_extent = get_object_pose(
+        "red block", return_bbox_extent=True
+    )
+    grasp_pos, grasp_quat = sample_grasp_pose("red block")
+except Exception:
+    obj_pos, _, obj_extent = get_object_pose("red cube", return_bbox_extent=True)
+    grasp_pos, grasp_quat = sample_grasp_pose("red cube")
+
+if obj_extent is None:
+    obj_extent = np.array([0.04, 0.04, 0.04])
+
+target_pos, target_extent, _ = get_target_region()
+
+# Determine placement height using object extent and target region geometry
+floor_z = obj_pos[2] - obj_extent[2] / 2.0
+if (
+    target_extent is not None
+    and hasattr(target_extent, "__len__")
+    and len(target_extent) >= 3
+    and target_extent[2] > 0
+):
+    candidate_floor = target_pos[2] - target_extent[2] / 2.0
+    bin_floor_z = (
+        candidate_floor if candidate_floor >= floor_z - 0.05 else floor_z
+    )
+else:
+    bin_floor_z = (
+        target_pos[2] if abs(target_pos[2] - floor_z) < 0.05 else floor_z
+    )
+
+place_z = (
+    bin_floor_z + 0.005 + (grasp_pos[2] - obj_pos[2]) + obj_extent[2] / 2.0
+)
+place_pos = np.array([target_pos[0], target_pos[1], place_z])
+
+# ==============================================================================
+# Stage 1: Grasp and lift the primary object
+# ==============================================================================
+open_gripper()
+goto_pose(grasp_pos, grasp_quat, z_approach=0.08)
+close_gripper()
+
+lift_pos = grasp_pos.copy()
+lift_pos[2] += 0.2
+goto_pose(lift_pos, grasp_quat)
+
+# Code block 1
+import numpy as np
+
+# Retrieve target region and object extent
+target_pos, target_extent, _ = get_target_region()
+_, _, obj_extent = get_object_pose('primary', return_bbox_extent=True)
+
+# Gripper facing downward
+gripper_down_quat = np.array([0.0, 0.0, 1.0, 0.0])
+
+# Move above the target bin
+hover_z = 0.15
+goto_pose(np.array([target_pos[0], target_pos[1], hover_z]), gripper_down_quat)
+
+# Descend safely into the bin
+place_z = target_pos[2] + (obj_extent[2] if obj_extent is not None else 0.036) + 0.01
+goto_pose(np.array([target_pos[0], target_pos[1], place_z]), gripper_down_quat)
+
+# Release object gently
+open_gripper()
+
+# Retreat upward
+goto_pose(np.array([target_pos[0], target_pos[1], hover_z]), gripper_down_quat)

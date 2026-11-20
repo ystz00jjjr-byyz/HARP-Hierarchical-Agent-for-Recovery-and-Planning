@@ -1,0 +1,62 @@
+env:
+  _target_: capx.envs.tasks.franka.franka_bin_place.FrankaBinPlaceCodeEnv
+  cfg:
+    _target_: capx.envs.tasks.base.CodeExecEnvConfig
+    low_level: franka_robosuite_bin_place_low_level
+    low_level_kwargs:
+      cube_half_sizes: 0.02,0.02,0.02
+      world_state_source: camera_rgbd
+      target_region_center_robot_base: 0.5025,0.2575,-0.102
+      target_region_extent_robot_base: 0.175,0.225,0.08
+    privileged: false
+    apis: [FrankaControlApi]
+
+api_servers:
+  - _target_: capx.serving.launch_sam3_server.main
+    device: cuda
+    port: 8114
+    host: 127.0.0.1
+    checkpoint_path: ${oc.env:SAM3_CHECKPOINT,./checkpoints/sam3.pt}
+  - _target_: capx.serving.launch_contact_graspnet_server.main
+    port: 8115
+    host: 127.0.0.1
+  - _target_: capx.serving.launch_pyroki_server.main
+    port: 8116
+    host: 127.0.0.1
+    robot: panda_description
+    target_link: panda_hand
+
+record_video: true
+trials: 10
+num_workers: 1
+max_trial_retries: 1
+trial_timeout_seconds: 1000
+output_dir: ./outputs/bin_place_nonprivileged_world_state_10seed_v3_20260918
+
+world_state_recorder:
+  enabled: true
+  record_every_n_sim_steps: 10
+  record_rgb: false
+  record_depth: false
+  compress_arrays: true
+
+offline_recovery:
+  enabled: true
+  task_graph: env_configs/bin_place/offline_task_graph.yaml
+  action_library: env_configs/recovery/grasp_miss_actions.yaml
+  recovery_library: env_configs/bin_place/recovery_library.yaml
+  k_action: 3
+  k_state: 3
+  min_stable_fraction: 0.6667
+  state_sampling:
+    enabled: true
+    window_size: 3
+    min_stable_fraction: 0.6667
+    numeric_abs_tolerance: 0.015
+    numeric_rel_tolerance: 0.05
+    include_entities: false
+    fail_open: false
+    action_aligned_window: true
+    wait_for_stability: true
+    stability_wait_steps: 5
+    sample_sim_steps: 3

@@ -1,0 +1,53 @@
+metadata:
+  status: formal
+  candidate_version: slender_geometry_recovery_v1
+  promoted_at: 2026-09-18
+  scope: cuboid_restack
+  promotion_gate:
+    required_seeds: [1, 3, 4, 8, 9]
+    minimum_successes: 4
+    required_model_requests: 0
+  validation:
+    date: 2026-09-18
+    replay_evidence:
+      initial_successes: outputs/cuboid_slender_candidate_replay_20260918/offline-candidate/replay
+      repaired_seeds_1_4: outputs/cuboid_slender_clear_v2_20260918/offline-candidate/replay
+    successes: 5
+    attempted: 5
+    model_requests: 0
+    passed: true
+    successful_seeds: [1, 3, 4, 8, 9]
+    promotion_decision: promote_for_cuboid_restack
+    directed_validation:
+      CLEAR_RECOVERY_FAILED:
+        result: task_completed
+        evidence: outputs/cuboid_slender_directed_injection_20260918/offline-candidate/clear
+      UNSTABLE_RELEASE:
+        result: task_completed
+        evidence: outputs/cuboid_slender_directed_release_20260918/offline-candidate/unstable_seed4
+      PLACE_ALIGNMENT_FAILED:
+        result: task_completed
+        evidence: outputs/cuboid_slender_directed_release_20260918/offline-candidate/alignment_seed4_v3
+      RECOVERY_BUDGET_LOW:
+        result: safe_stop
+        evidence: outputs/cuboid_slender_directed_budget_20260918/offline-candidate/run
+recovery_library:
+  CLEAR_RECOVERY_FAILED:
+    - recover_clear_recovery_radial
+  SLENDER_GRASP_POSE_UNSAFE:
+    - recover_slender_grasp_pose
+    - stage_003_after_recovery
+  GRASP_MISS:
+    - recover_slender_grasp_pose
+    - stage_003_after_recovery
+  PLACE_FAILED:
+    - recover_slender_place_alignment
+  PLACE_ALIGNMENT_FAILED:
+    - recover_slender_place_alignment
+  UNSTABLE_RELEASE:
+    - recover_slender_unstable_release
+    - recover_slender_place_alignment
+  RECOVERY_BUDGET_LOW:
+    - recover_budget_safe_stop
+  CLEAR_PRECONDITION_FAILED:
+    - recover_clear_precondition

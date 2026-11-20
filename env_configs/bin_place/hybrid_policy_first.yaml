@@ -1,0 +1,93 @@
+env:
+  _target_: capx.envs.tasks.franka.franka_bin_place.FrankaBinPlaceCodeEnv
+  cfg:
+    _target_: capx.envs.tasks.base.CodeExecEnvConfig
+    low_level: franka_robosuite_bin_place_low_level
+    low_level_kwargs:
+      cube_half_sizes: 0.02,0.02,0.02
+    privileged: false
+    apis: [FrankaControlApi]
+    multi_turn_prompt: |
+      The bin-placement policy and its matching recovery route have already
+      been attempted. Use the hard stage result and K=3 world state. Return
+      REGENERATE with one short parameterized recovery block, or FINISH only
+      when task_completed is explicitly true.
+
+api_servers:
+  - _target_: capx.serving.launch_sam3_server.main
+    device: cuda
+    port: 8114
+    host: 127.0.0.1
+    checkpoint_path: ${oc.env:SAM3_CHECKPOINT,./checkpoints/sam3.pt}
+  - _target_: capx.serving.launch_contact_graspnet_server.main
+    port: 8115
+    host: 127.0.0.1
+  - _target_: capx.serving.launch_pyroki_server.main
+    port: 8116
+    host: 127.0.0.1
+    robot: panda_description
+    target_link: panda_hand
+
+record_video: true
+use_visual_feedback: true
+save_multiturn_prompts: true
+trials: 10
+num_workers: 1
+max_trial_retries: 1
+trial_timeout_seconds: 1000
+output_dir: ./outputs/bin_place_candidate_10seed/hybrid
+
+world_state_recorder:
+  enabled: true
+  record_every_n_sim_steps: 10
+  record_rgb: false
+  record_depth: false
+  compress_arrays: true
+
+execution_guard:
+  enabled: true
+  reject_empty_code: true
+  max_robot_api_calls_per_block: 9
+  max_expensive_loop_iterations: 0
+  finish_requires_task_completed: true
+  max_decision_reprompts: 2
+  stage_expectations:
+    - name: primary_grasped
+      required:
+        target_grasped: true
+        object_lifted: true
+        wrong_object_grasped: false
+    - name: primary_inside_bin
+      required:
+        object_inside_container: true
+        task_completed: true
+        gripper_open: true
+        object_stable: true
+
+text_world_state_feedback:
+  enabled: true
+  window_size: 3
+  min_stable_fraction: 0.6667
+  numeric_abs_tolerance: 0.01
+  numeric_rel_tolerance: 0.05
+  include_entities: true
+  fail_open: false
+  loop_guard_enabled: true
+  max_same_failure_retries: 2
+  min_progress_delta: 0.01
+  action_aligned_window: true
+  wait_for_stability: true
+  stability_wait_steps: 20
+  sample_sim_steps: 3
+
+hybrid_recovery:
+  enabled: true
+  policy_first: true
+  max_model_fallbacks_per_exception: 2
+  policy_preconditions:
+    bin_policy_eligible: true
+    container_entry_clear: true
+  task_graph: env_configs/bin_place/offline_task_graph.yaml
+  action_library: env_configs/recovery/grasp_miss_actions.yaml
+  recovery_library: env_configs/bin_place/recovery_library.yaml
+  stage_actions: [stage_001, stage_002]

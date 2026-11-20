@@ -1,0 +1,196 @@
+----------------------------------------------------------------------------------------------------
+Generated program:
+# Code block 0
+import numpy as np
+
+# Query the live object extent and target region
+object_name = "red block"
+for name in ["red block", "red cube", "block", "cube"]:
+    try:
+        obj_pos, _, obj_extent = get_object_pose(name, return_bbox_extent=True)
+        if obj_pos is not None and obj_extent is not None:
+            grasp_pos, grasp_quat = sample_grasp_pose(name)
+            object_name = name
+            break
+    except Exception:
+        continue
+
+try:
+    target_pos, target_quat, target_size = get_target_region("target")
+except Exception:
+    try:
+        target_pos, target_quat, target_size = get_target_region("target bin")
+    except Exception:
+        target_pos, target_quat, target_size = get_target_region()
+
+# Determine lift height to safely clear bin walls
+lift_z = max(grasp_pos[2] + 0.25, target_pos[2] + 0.25)
+lift_pos = grasp_pos.copy()
+lift_pos[2] = lift_z
+
+# Stage 1: grasp and lift the primary object
+open_gripper()
+goto_pose(grasp_pos, grasp_quat, z_approach=0.1)
+close_gripper()
+goto_pose(lift_pos, grasp_quat)
+
+# Code block 1
+# Query live object extent and target region
+_, _, obj_extent = get_object_pose('red cube', return_bbox_extent=True)
+target_center, target_extent, _ = get_target_region()
+
+# Stage 1: grasp and lift primary object
+open_gripper()
+grasp_pos, grasp_quat = sample_grasp_pose('red cube')
+goto_pose(grasp_pos, grasp_quat, z_approach=0.1)
+close_gripper()
+
+lift_pos = grasp_pos.copy()
+lift_pos[2] += 0.2
+goto_pose(lift_pos, grasp_quat)
+
+# Code block 2
+import numpy as np
+
+# Stage 1: Grasp and lift the primary object
+open_gripper()
+obj_pos, _, obj_extent = get_object_pose('primary', return_bbox_extent=True)
+grasp_pos, grasp_quat = sample_grasp_pose('primary')
+
+goto_pose(grasp_pos, grasp_quat, z_approach=0.1)
+close_gripper()
+
+lift_pos = grasp_pos.copy()
+lift_pos[2] += 0.15
+goto_pose(lift_pos, grasp_quat)
+
+# Code block 3
+import numpy as np
+
+# Query live object extent and target region
+obj_pos, _, obj_extent = get_object_pose("primary", return_bbox_extent=True)
+target_pos, target_extent, _ = get_target_region("target")
+
+# Stage 1: Grasp and lift the primary object
+open_gripper()
+grasp_pos, grasp_quat = sample_grasp_pose("primary")
+goto_pose(grasp_pos, grasp_quat, z_approach=0.08)
+close_gripper()
+
+lift_pos = grasp_pos.copy()
+lift_pos[2] += 0.15
+goto_pose(lift_pos, grasp_quat)
+
+# Code block 4
+import numpy as np
+
+# Stage 1: Grasp and lift the primary object
+open_gripper()
+grasp_pos, grasp_quat = sample_grasp_pose('primary')
+goto_pose(grasp_pos, grasp_quat, z_approach=0.1)
+close_gripper()
+
+lift_pos = grasp_pos.copy()
+lift_pos[2] += 0.15
+goto_pose(lift_pos, grasp_quat)
+
+# Code block 5
+import numpy as np
+
+# Stage 1: Grasp and lift the primary object
+open_gripper()
+grasp_pos, grasp_quat = sample_grasp_pose("primary")
+goto_pose(grasp_pos, grasp_quat, z_approach=0.08)
+close_gripper()
+
+lift_pos = grasp_pos.copy()
+lift_pos[2] += 0.15
+goto_pose(lift_pos, grasp_quat)
+
+# Code block 6
+import numpy as np
+
+# Query live object extent and target region geometry
+obj_pos, _, obj_extent = get_object_pose('primary', return_bbox_extent=True)
+target_pos, target_quat, target_extent = get_target_region('target')
+
+# Sample grasp pose for primary object
+grasp_pos, grasp_quat = sample_grasp_pose('primary')
+
+pre_grasp_pos = grasp_pos.copy()
+pre_grasp_pos[2] += 0.10
+
+lift_pos = grasp_pos.copy()
+lift_pos[2] += 0.15
+
+# Stage 1: Reset to safe home, open gripper, approach, grasp, and lift
+home_pose()
+open_gripper()
+goto_pose(pre_grasp_pos, grasp_quat)
+goto_pose(grasp_pos, grasp_quat)
+close_gripper()
+goto_pose(lift_pos, grasp_quat)
+
+# Code block 7
+import numpy as np
+
+# Stage 1: grasp and lift the primary object
+open_gripper()
+_, _, bbox_extent = get_object_pose("primary", return_bbox_extent=True)
+grasp_pos, grasp_quat = sample_grasp_pose("primary")
+
+goto_pose(grasp_pos, grasp_quat, z_approach=0.08)
+close_gripper()
+
+lift_pos = grasp_pos.copy()
+lift_pos[2] = 0.12
+goto_pose(lift_pos, grasp_quat)
+
+# Code block 8
+# Stage 1: Grasp and lift the primary object
+open_gripper()
+grasp_pos, grasp_quat = sample_grasp_pose('primary')
+goto_pose(grasp_pos, grasp_quat, z_approach=0.1)
+close_gripper()
+
+lift_pos = grasp_pos.copy()
+lift_pos[2] += 0.15
+goto_pose(lift_pos, grasp_quat)
+
+# Code block 9
+import numpy as np
+
+# Stage 1: Grasp and lift the primary object
+open_gripper()
+pos, quat = sample_grasp_pose("primary")
+goto_pose(pos, quat, z_approach=0.1)
+close_gripper()
+lift_pos = pos.copy()
+lift_pos[2] += 0.15
+goto_pose(lift_pos, quat)
+
+# Code block 10
+# Stage 2: Enter the bin, release, and retreat
+target_pos, target_quat, _ = get_target_region("target")
+above_bin = np.array([target_pos[0], target_pos[1], 0.1])
+goto_pose(above_bin, quat)
+
+place_pos = np.array([target_pos[0], target_pos[1], target_pos[2] + 0.04])
+goto_pose(place_pos, quat)
+open_gripper()
+
+retreat_pos = np.array([target_pos[0], target_pos[1], 0.15])
+goto_pose(retreat_pos, quat)
+
+
+Environment response:
+  Sandbox failed: 0
+  Stdout: 
+  Stderr: Static execution gate rejected code: expensive robot/perception API appears in an unbounded loop
+  Reward: 0.0
+  Task Completed: False
+  Terminated: False, Truncated: True
+  Num Regenerations: 9
+  Num Finishes: 0
+  Num Code Blocks: 11
+----------------------------------------------------------------------------------------------------

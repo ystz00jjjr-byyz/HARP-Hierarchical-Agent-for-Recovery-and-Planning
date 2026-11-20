@@ -1,0 +1,14 @@
+{
+  "model": "gpt-6-astra",
+  "billing": "chatgpt_subscription",
+  "image_count": 0,
+  "usage": {
+    "input_tokens": 10951,
+    "cached_input_tokens": 0,
+    "cache_write_input_tokens": 0,
+    "output_tokens": 101,
+    "reasoning_output_tokens": 0
+  },
+  "model_response_seconds": 12.596935763999682,
+  "response": "{\"version\":\"recovery_graph_v1\",\"steps\":[{\"skill\":\"reobserve_object\"},{\"skill\":\"sample_grasp\",\"mode\":\"sample_grasp_pose\"},{\"skill\":\"regrasp\",\"approach_clearance\":0.10,\"lift_clearance\":0.18},{\"skill\":\"reobserve_target\"},{\"skill\":\"replace\",\"entry_clearance\":0.12},{\"skill\":\"verify\"}]}"
+}

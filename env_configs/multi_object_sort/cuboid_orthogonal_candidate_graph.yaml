@@ -1,0 +1,330 @@
+metadata:
+  status: candidate
+  task_family: multi_object_sort
+  candidate: cuboid_short_side_orthogonal_grasp_v1
+  max_attempts_per_action: 1
+  promotion_gate:
+    smoke_minimum_successes: 4
+    smoke_trials: 5
+    unseen_minimum_successes: 8
+    unseen_trials: 10
+
+initial: [stage_001]
+
+actions:
+  - id: stage_001
+    primitive: multi_object_sort_nominal
+    code: "pass"
+    success_conditions:
+      task_completed: true
+    failure_routes:
+      POSTCONDITION_FAILED: SORT_RECOVERY_REQUIRED
+      SANDBOX_ERROR: SORT_RECOVERY_REQUIRED
+
+  - id: candidate_cuboid_short_side_gate
+    primitive: verify_cuboid_short_side_graspability
+    code: "pass"
+    preconditions:
+      object_shapes.primary: cuboid
+      object_observation_ready: true
+      object_stable: true
+      workspace_edge_recovery_feasible: true
+      cuboid_graspability.short_side_graspable: true
+    success_conditions:
+      cuboid_graspability.short_side_graspable: true
+    next: candidate_cuboid_controlled_workspace_move
+    metadata:
+      status: candidate
+      interrupt_on_failure: true
+      max_attempts: 1
+      failure_next_action: recover_budget_safe_stop
+      precondition_failure_next_action: recover_budget_safe_stop
+
+  - id: candidate_cuboid_reobserve_move_orthogonal
+    primitive: reobserve_before_orthogonal_workspace_move
+    code: |
+      home_pose()
+      open_gripper()
+      get_object_pose("primary", return_bbox_extent=True)
+      get_object_pose("secondary", return_bbox_extent=True)
+    success_conditions:
+      object_observation_ready: true
+      measurement_fresh: true
+      workspace_edge_recovery_required: true
+      workspace_edge_recovery_feasible: true
+      object_stable: true
+      cuboid_graspability.orthogonal_side_graspable: true
+    next: candidate_cuboid_controlled_workspace_move_orthogonal
+    metadata:
+      status: candidate
+      observation_refresh: true
+      interrupt_on_failure: true
+      max_attempts: 1
+      failure_next_action: recover_budget_safe_stop
+      precondition_failure_next_action: recover_budget_safe_stop
+
+  - id: candidate_cuboid_controlled_workspace_move_orthogonal
+    primitive: grasp_workspace_edge_cuboid_with_orthogonal_candidate
+    code: |
+      import numpy as np
+
+      edge_grasp, edge_quat, edge_extent = sample_cuboid_grasp_plan(
+          "primary", 1
+      )
+      edge_clearance = max(0.08, 2.0 * float(edge_extent[2]))
+      edge_lift_height = max(0.03, 0.875 * float(edge_extent[2]))
+      goto_pose(edge_grasp, edge_quat, z_approach=edge_clearance)
+      close_gripper()
+      edge_lifted = edge_grasp + np.array([0.0, 0.0, edge_lift_height])
+      goto_pose(edge_lifted, edge_quat)
+    preconditions:
+      cuboid_graspability.orthogonal_side_graspable: true
+      workspace_edge_recovery_required: true
+    success_conditions:
+      active_grasp_role: primary
+      target_grasped: true
+      object_lifted: true
+      wrong_object_grasped: false
+    next: candidate_cuboid_transfer_into_workspace_orthogonal
+    metadata:
+      status: candidate
+      interrupt_on_failure: true
+      max_attempts: 1
+      failure_next_action: recover_budget_safe_stop
+      precondition_failure_next_action: recover_budget_safe_stop
+
+  - id: candidate_cuboid_transfer_into_workspace_orthogonal
+    primitive: transfer_orthogonally_grasped_cuboid_into_workspace
+    code: |
+      import numpy as np
+
+      edge_safe = edge_lifted.copy()
+      edge_safe[0] = float(np.clip(edge_grasp[0], 0.50, 0.68))
+      edge_safe[1] = float(np.clip(edge_grasp[1], -0.12, 0.12))
+      edge_mid = 0.5 * (edge_lifted + edge_safe)
+      goto_pose(edge_mid, edge_quat)
+      goto_pose(edge_safe, edge_quat)
+      edge_release = edge_safe - np.array([0.0, 0.0, edge_lift_height])
+      goto_pose(edge_release, edge_quat)
+      open_gripper()
+      goto_pose(edge_safe, edge_quat)
+      home_pose()
+    success_conditions:
+      object_inside_regrasp_workspace: true
+      gripper_open: true
+      object_stable: true
+    next: candidate_cuboid_reobserve
+    metadata:
+      status: candidate
+      interrupt_on_failure: true
+      max_attempts: 1
+      failure_next_action: recover_budget_safe_stop
+      precondition_failure_next_action: recover_budget_safe_stop
+
+  - id: candidate_cuboid_controlled_workspace_move
+    primitive: grasp_workspace_edge_cuboid_across_short_side
+    code: |
+      import numpy as np
+
+      home_pose()
+      open_gripper()
+      edge_grasp, edge_quat, edge_extent = sample_cuboid_grasp_plan(
+          "primary", 0
+      )
+      edge_clearance = max(0.08, 2.0 * float(edge_extent[2]))
+      edge_lift_height = max(0.03, 0.875 * float(edge_extent[2]))
+      goto_pose(edge_grasp, edge_quat, z_approach=edge_clearance)
+      close_gripper()
+      edge_lifted = edge_grasp + np.array([0.0, 0.0, edge_lift_height])
+      goto_pose(edge_lifted, edge_quat)
+    success_conditions:
+      active_grasp_role: primary
+      target_grasped: true
+      object_lifted: true
+      wrong_object_grasped: false
+    next: candidate_cuboid_transfer_into_workspace
+    metadata:
+      status: candidate
+      interrupt_on_failure: true
+      max_attempts: 1
+      failure_next_action: candidate_cuboid_reobserve_move_orthogonal
+      precondition_failure_next_action: recover_budget_safe_stop
+
+  - id: candidate_cuboid_transfer_into_workspace
+    primitive: transfer_short_side_grasped_cuboid_into_workspace
+    code: |
+      import numpy as np
+
+      edge_safe = edge_lifted.copy()
+      edge_safe[0] = float(np.clip(edge_grasp[0], 0.50, 0.68))
+      edge_safe[1] = float(np.clip(edge_grasp[1], -0.12, 0.12))
+      edge_mid = 0.5 * (edge_lifted + edge_safe)
+      goto_pose(edge_mid, edge_quat)
+      goto_pose(edge_safe, edge_quat)
+      edge_release = edge_safe - np.array([0.0, 0.0, edge_lift_height])
+      goto_pose(edge_release, edge_quat)
+      open_gripper()
+      goto_pose(edge_safe, edge_quat)
+      home_pose()
+    success_conditions:
+      object_inside_regrasp_workspace: true
+      gripper_open: true
+      object_stable: true
+    next: candidate_cuboid_reobserve
+    metadata:
+      status: candidate
+      interrupt_on_failure: true
+      max_attempts: 1
+      failure_next_action: candidate_cuboid_reobserve_move_orthogonal
+      precondition_failure_next_action: recover_budget_safe_stop
+
+  - id: candidate_cuboid_reobserve
+    primitive: reobserve_cuboid_before_regrasp
+    code: |
+      home_pose()
+      open_gripper()
+      get_object_pose("primary", return_bbox_extent=True)
+      get_object_pose("secondary", return_bbox_extent=True)
+    success_conditions:
+      object_observation_ready: true
+      measurement_fresh: true
+      object_inside_regrasp_workspace: true
+      object_stable: true
+      cuboid_graspability.short_side_graspable: true
+    next: candidate_cuboid_regrasp_short_side
+    metadata:
+      status: candidate
+      observation_refresh: true
+      interrupt_on_failure: true
+      max_attempts: 1
+      failure_next_action: recover_budget_safe_stop
+      precondition_failure_next_action: recover_budget_safe_stop
+
+  - id: candidate_cuboid_regrasp_short_side
+    primitive: regrasp_cuboid_across_short_side
+    code: |
+      import numpy as np
+
+      recovery_grasp, recovery_quat, recovery_primary_extent = (
+          sample_cuboid_grasp_plan("primary", 0)
+      )
+      recovery_clearance = max(0.08, 2.0 * float(recovery_primary_extent[2]))
+      goto_pose(recovery_grasp, recovery_quat, z_approach=recovery_clearance)
+      close_gripper()
+      goto_pose(
+          recovery_grasp + np.array([0.0, 0.0, 0.15]), recovery_quat
+      )
+    preconditions:
+      cuboid_graspability.short_side_graspable: true
+    success_conditions:
+      active_grasp_role: primary
+      target_grasped: true
+      object_lifted: true
+      wrong_object_grasped: false
+    next: candidate_cuboid_replace
+    metadata:
+      status: candidate
+      interrupt_on_failure: true
+      max_attempts: 1
+      failure_next_action: candidate_cuboid_reobserve_orthogonal
+      precondition_failure_next_action: recover_budget_safe_stop
+
+  - id: candidate_cuboid_reobserve_orthogonal
+    primitive: reobserve_before_orthogonal_cuboid_grasp
+    code: |
+      home_pose()
+      open_gripper()
+      get_object_pose("primary", return_bbox_extent=True)
+      get_object_pose("secondary", return_bbox_extent=True)
+    success_conditions:
+      object_observation_ready: true
+      measurement_fresh: true
+      object_inside_regrasp_workspace: true
+      object_stable: true
+      cuboid_graspability.orthogonal_side_graspable: true
+    next: candidate_cuboid_regrasp_orthogonal
+    metadata:
+      status: candidate
+      observation_refresh: true
+      interrupt_on_failure: true
+      max_attempts: 1
+      failure_next_action: recover_budget_safe_stop
+      precondition_failure_next_action: recover_budget_safe_stop
+
+  - id: candidate_cuboid_regrasp_orthogonal
+    primitive: regrasp_cuboid_with_orthogonal_candidate
+    code: |
+      import numpy as np
+
+      recovery_grasp, recovery_quat, recovery_primary_extent = (
+          sample_cuboid_grasp_plan("primary", 1)
+      )
+      recovery_clearance = max(0.08, 2.0 * float(recovery_primary_extent[2]))
+      goto_pose(recovery_grasp, recovery_quat, z_approach=recovery_clearance)
+      close_gripper()
+      goto_pose(
+          recovery_grasp + np.array([0.0, 0.0, 0.15]), recovery_quat
+      )
+    preconditions:
+      cuboid_graspability.orthogonal_side_graspable: true
+    success_conditions:
+      active_grasp_role: primary
+      target_grasped: true
+      object_lifted: true
+      wrong_object_grasped: false
+    next: candidate_cuboid_replace
+    metadata:
+      status: candidate
+      interrupt_on_failure: true
+      max_attempts: 1
+      failure_next_action: recover_budget_safe_stop
+      precondition_failure_next_action: recover_budget_safe_stop
+
+  - id: candidate_cuboid_replace
+    primitive: replace_cuboid_in_primary_target
+    code: |
+      import numpy as np
+
+      recovery_target, _, _ = get_target_region("target_primary")
+      recovery_depth = float(np.clip(
+          0.20 * recovery_primary_extent[2], 0.004, 0.008
+      ))
+      recovery_place = recovery_target + np.array([
+          0.0,
+          0.0,
+          0.5 * float(recovery_primary_extent[2]) - recovery_depth,
+      ])
+      goto_pose(
+          recovery_place + np.array([0.0, 0.0, recovery_clearance]),
+          recovery_quat,
+      )
+      goto_pose(recovery_place, recovery_quat)
+      open_gripper()
+      goto_pose(
+          recovery_place + np.array([0.0, 0.0, recovery_clearance]),
+          recovery_quat,
+      )
+      home_pose()
+    success_conditions:
+      task_completed: true
+      objects_at_targets.primary: true
+      gripper_open: true
+      object_stable: true
+    metadata:
+      status: candidate
+      interrupt_on_failure: true
+      max_attempts: 1
+      failure_next_action: recover_budget_safe_stop
+      precondition_failure_next_action: recover_budget_safe_stop
+
+  - id: recover_budget_safe_stop
+    primitive: recover_budget_safe_stop
+    code: |
+      home_pose()
+      open_gripper()
+    success_conditions:
+      gripper_open: true
+    metadata:
+      status: formal
+      terminal: safe_stop
+      max_attempts: 1
